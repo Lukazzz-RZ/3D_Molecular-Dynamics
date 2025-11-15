@@ -23,6 +23,11 @@ void Inicializar(void) {
     Fext.y = 0.0;
     Fext.z = 0.0;
 
+    sigma = b/sqrt(sqrt(sqrt(2)));
+    //Por temass de estabilidad. Esto te fija el minimo de energía en b 
+    //MUY SENSIBLE
+    eps = 4e-24;
+
     for (int j = 0; j < N_particulas; j++) {
         P[j].pos.x = (double)j;
         P[j].pos.y = (double)j;

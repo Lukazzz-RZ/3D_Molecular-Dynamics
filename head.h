@@ -7,6 +7,8 @@
 #include <direct.h> 
 #include <math.h>
 #include <time.h>
+//#define SWEEPMODE
+#define COMPLEXMODEL
 
 
 // FORMATO DE TRABAJO
@@ -39,7 +41,7 @@ void Ini_N_Rand(int SEMILLA);
 
 #define PI acos(-1.0)
 #define N_bins 50
-# define N_particulas 32
+# define N_particulas 8
 
 // VARIABLES GLOBALES
 
@@ -55,6 +57,9 @@ extern double x0;
 extern double v0;
 extern double tmax;
 
+extern double sigma;
+extern double eps;
+
 // FUNCIONES
 
 void Inicializar(void);
@@ -64,6 +69,8 @@ void verlet_estocastico_3D_extremo(Particula* P, Particula P2, FuncionFuerzaExtr
 void verlet_estocastico_3D_intermedio(Particula P2, Particula* P, Particula P3, FuncionFuerzaIntermedio Fuerza);
 double Potencial_Extremo(Particula P1, Particula P2);
 double Potencial_Intermedio(Particula P_ant, Particula P, Particula Psig);
+double V_LennardJones(Particula pi);
+double dV_LennardJones(Particula pi, int Coor);
 void Actualizar_Energias(Particula* P);
 Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig);
 Vector Fuerza_Extremo(Particula P1, Particula P2);

@@ -60,6 +60,7 @@ void Gnuplot_EnerCons(int bloques) {
         "set xlabel 't'\n"
         "set ylabel 'Energía'\n"
         "set grid\n"
+        "set yrange [0:100]\n"
         "set style line 1 lc rgb '#dd181f' lw 2 lt 1\n"
         "set style line 2 lc rgb '#0060ad' lw 2 lt 1\n"
         "set style line 3 lc rgb '#800080' lw 2 lt 1\n"

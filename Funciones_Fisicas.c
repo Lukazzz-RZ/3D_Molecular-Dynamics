@@ -13,6 +13,10 @@ Vector Fext;
 double dt;
 double tmax;
 
+double sigma;
+double eps;
+
+
 
 // FUNCIONES DE ENERGIA //
 
@@ -27,6 +31,13 @@ double Potencial_Extremo(Particula P1, Particula P2) {
 
     double V_elastico = 0.5 * k * (modr_rel - b) * (modr_rel - b);
     double V_externo = -(Fext.x * P1.pos.x + Fext.y * P1.pos.y + Fext.z * P1.pos.z);
+
+    #ifdef COMPLEXMODEL
+
+    double V_LJ= V_LennardJones(P1);
+    V_externo +=V_LJ;
+
+    #endif
 
     return V_elastico + V_externo;
 }
@@ -51,9 +62,27 @@ double Potencial_Intermedio(Particula P_ant, Particula P, Particula P_sig) {
 
     double V_externo = -(Fext.x * P.pos.x + Fext.y * P.pos.y + Fext.z * P.pos.z);
 
+    #ifdef COMPLEXMODEL
+
+    double V_LJ= V_LennardJones(P);
+    V_externo +=V_LJ;
+
+    #endif
+
     return V_elastico + V_externo;
 }
 
+double V_LennardJones(Particula pi){
+    //Potencial que observa la partícula pi por el resto de las pj
+    double V_Aux = 0;
+    double r;
+    for (int j=0; j<N_particulas; j++){
+        r=modulo(resta(pi.pos,P[j].pos));
+            if(r !=0 ) //Es decir, no es la misma partícula
+            V_Aux += 4*eps*(pow(sigma/r,12)-pow(sigma/r,6));
+    }
+    return V_Aux;
+}
 
 // DEFINICIÓN DEL POTENCIAL //
 
@@ -76,6 +105,14 @@ Vector Fuerza_Extremo(Particula P1, Particula P2) {
         F.y = factor * r_rel.y + Fext.y;
         F.z = factor * r_rel.z + Fext.z;
     }
+
+    #ifdef COMPLEXMODEL
+
+    F.x += dV_LennardJones(P1,1);
+    F.y += dV_LennardJones(P1,2);
+    F.z += dV_LennardJones(P1,3);
+
+    #endif
 
     return F;
 }
@@ -116,7 +153,33 @@ Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig) {
     F.y += Fext.y;
     F.z += Fext.z;
 
+    #ifdef COMPLEXMODEL
+
+    F.x += dV_LennardJones(P,1);
+    F.y += dV_LennardJones(P,2);
+    F.z += dV_LennardJones(P,3);
+
+    #endif
+
     return F;
+    }
+
+    double dV_LennardJones(Particula pi, int Coor){
+    //Potencial que observa la partícula pi por el resto de las pj
+    //Si, he reutilizado el otro descaradamente
+    double V_Aux = 0;
+    double r;
+    int part_Nominal;
+    for (int j=0; j<N_particulas; j++){
+        r=modulo(resta(pi.pos,P[j].pos));
+            if(r !=0 ) //Es decir, no es la misma partícula
+            V_Aux += 1/r/r/4*eps*(12*pow(sigma/r,12)-6*pow(sigma/r,6));
+            else part_Nominal = j;
+    }
+    if (Coor == 1) return V_Aux*P[part_Nominal].pos.x;
+    if (Coor == 2) return V_Aux*P[part_Nominal].pos.y;
+    if (Coor == 3) return V_Aux*P[part_Nominal].pos.z;
+
 }
 
 // ACTUALIZACION DE ENERGIAS //
