@@ -1,0 +1,32 @@
+mol new results/Data_00001.xyz type xyz first 0 last 0 step 1 waitfor all
+mol addfile results/Data_00002.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00003.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00004.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00005.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00006.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00007.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00008.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00009.xyz type xyz first 0 last -1 step 1 waitfor all 0
+mol addfile results/Data_00010.xyz type xyz first 0 last -1 step 1 waitfor all 0
+
+display resetview
+display resize 1000 800
+display projection Perspective
+color Display Background white
+axes location off
+stage location off
+
+mol delrep 0 0
+mol representation Licorice 0.4 12 12
+mol color ColorID 1
+mol addrep 0
+
+set sel [atomselect top all]
+set com [measure center $sel]
+$sel moveby [vecinvert $com]
+$sel delete
+
+animate goto 0
+animate style Loop
+animate speed 1.0
+animate forward

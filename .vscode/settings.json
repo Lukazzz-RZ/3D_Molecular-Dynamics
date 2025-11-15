@@ -1,0 +1,10 @@
+{
+  "code-runner.runInTerminal": true,
+  "code-runner.executorMap": {
+    "c": "gcc *.c -o programa.exe && ./programa.exe"
+  },
+  "files.associations": {
+    "stdlib.h": "c",
+    "string.h": "c"
+  }
+}

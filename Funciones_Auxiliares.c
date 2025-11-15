@@ -49,6 +49,20 @@ double modulo(Vector r){
     return sqrt(r.x*r.x + r.y* r.y + r.z* r.z);
 }
 
+double Pesc(Vector r1, Vector r2){
+    //VA NORM
+    return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z)/modulo(r1)/modulo(r2);
+}
+
+Vector resta(Vector r1, Vector r2){
+    Vector result;
+    result.x = r1.x -r2.x;
+    result.y = r1.y -r2.y;
+    result.z = r1.z -r2.z;
+
+    return result;
+}
+
 Vector CDM_uniforme(Vector* r, int N) {
     Vector r_cdm = { 0.0, 0.0, 0.0 };
     for (int i = 0; i < N; i++) {
@@ -60,6 +74,11 @@ Vector CDM_uniforme(Vector* r, int N) {
     r_cdm.y /= (double)N;
     r_cdm.z /= (double)N;
     return r_cdm;
+}
+
+double theta(Vector r1, Vector r2){
+    //Devuelve angulo entre 2 vectores en rads entiendo
+    return acos(Pesc(r1,r2));
 }
 
 // FUNCIONES DE NUMEROS ALEATORIOS //

@@ -8,6 +8,7 @@
 #include <math.h>
 #include <time.h>
 
+
 // FORMATO DE TRABAJO
 typedef struct {
 	double x;
@@ -38,7 +39,7 @@ void Ini_N_Rand(int SEMILLA);
 
 #define PI acos(-1.0)
 #define N_bins 50
-# define N_particulas 4
+# define N_particulas 32
 
 // VARIABLES GLOBALES
 
@@ -58,6 +59,7 @@ extern double tmax;
 
 void Inicializar(void);
 double modulo(Vector r);
+double Pesc(Vector r1, Vector r2);
 void verlet_estocastico_3D_extremo(Particula* P, Particula P2, FuncionFuerzaExtremo Fuerza);
 void verlet_estocastico_3D_intermedio(Particula P2, Particula* P, Particula P3, FuncionFuerzaIntermedio Fuerza);
 double Potencial_Extremo(Particula P1, Particula P2);
@@ -66,6 +68,7 @@ void Actualizar_Energias(Particula* P);
 Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig);
 Vector Fuerza_Extremo(Particula P1, Particula P2);
 Vector CDM_uniforme(Vector* r, int N);
+Vector resta(Vector r1, Vector r2);
 double Radio_giro(Particula* P);
 FILE* crear_archivo_xyz(int bloque);
 FILE* crear_archivo_variables(int bloque, const char* cabecera);
