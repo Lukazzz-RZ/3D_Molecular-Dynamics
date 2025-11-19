@@ -14,7 +14,7 @@ void Inicializar(void) {
     Ini_N_Rand(time(NULL));
     m = 1.0;
     k = 100.0;
-    KbT = 1.0;
+    KbT = 0.5;
     b = 1.0;
     gamma_DP = 1.0;
     dt = 0.01;
@@ -26,7 +26,10 @@ void Inicializar(void) {
     sigma = b / pow(2.0, 1.0 / 6.0);
     //sigma = 0;
     rc = 3 * sigma;
-    eps = 1.0;
+    eps = 2.;
+    kb = 10;
+
+    double q_ant=1.;
 
     for (int j = 0; j < N_particulas; j++) {
         P[j].pos.x = (double)j;
@@ -38,25 +41,36 @@ void Inicializar(void) {
         P[j].Ecin = 0.5 * m * modulo(P[j].vel) * modulo(P[j].vel);
         if (j == 0) {
             P[j].Epot = Potencial_Extremo(P[j], P[j+1]);
+            P[j].q = -1.;
+            q_ant = P[j].q;
+
         }
         else if (j == N_particulas - 1) {
             P[j].Epot = Potencial_Extremo(P[j], P[j-1]);
         }
         else {
             P[j].Epot = Potencial_Intermedio(P[j-1], P[j], P[j+1]);
+            if((j+1)%3==0){
+                P[j].q= -1.*q_ant;
+                q_ant = P[j].q;
+
+            } 
 		}
+
+        P[j].q = P[j].q*2.5;
+        
     }
 }
 
 // FUNCIONES DE CALCULO VECTORIAL //
 
 double modulo(Vector r){
-    return sqrt(r.x*r.x + r.y* r.y + r.z* r.z);
+    return sqrt(r.x*r.x + r.y*r.y + r.z*r.z);
 }
 
 double Pesc(Vector r1, Vector r2){
-    //VA NORM
-    return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z)/modulo(r1)/modulo(r2);
+    //NO NORM
+    return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z);
 }
 
 Vector resta(Vector r1, Vector r2){

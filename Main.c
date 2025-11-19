@@ -5,8 +5,13 @@ int main() {
     printf("Ejecutando en COMPLEXMODEL...\n");
 #endif
     Inicializar();
-
-    int Ndata = (int)(tmax / dt);
+    double SweepDet = 1.;
+#ifdef SWEEPMODE
+    //Usamos el bloque principal simplemente para termalizar
+    SweepDet = 0.16;
+#endif
+    /*
+    int Ndata = (int)(tmax / dt * 0.16);
     int Nbloques = 10;
     int pasos_por_bloque = Ndata / Nbloques;
 
@@ -88,18 +93,20 @@ int main() {
     printf("Simulacion completa.\n");
     return 0;
 
+    */
+
     #ifdef SWEEPMODE
         printf("Ejecutando en SIMPLEMODEL...\n");
 
         Inicializar();
 
-
-    int N_sweep = 40;
-    double F_MAX = 1.;
+    int N_sweep = 50;
+    double F_MAX = 5.;
     double LEff_Aux;
     char Nomfich [40];
-        sprintf(Nomfich, "ForceSweep_b%.3f_N%d.txt", b, N_particulas);
+        sprintf(Nomfich, "Al_ForceSweep_b%.3f_N%d.txt", b, N_particulas);
     FILE *fout = fopen(Nomfich, "wt");
+    double t_term = 1000;
 
 
     int Ndata = (int)(tmax / dt);
@@ -110,13 +117,20 @@ int main() {
 
     printf("Actualmente %3.f%\n", (double)k/(N_sweep-1)*100.0);
     //Inicializamos en cada bucle para asegurarnos de que todo va bien
-    Inicializar();
 
-    //Cambiamos las componentes de la fuerza
     
-    Fext.x = -F_MAX/N_sweep*k;
-    Fext.y = -F_MAX/N_sweep*k;
-    Fext.z = -F_MAX/N_sweep*k;
+    //Termalizado
+    Inicializar();
+    
+    for (int h=0; h<(int)(t_term/dt); h++){
+        verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
+            for (int i = 1; i < N_particulas - 1; i++)
+                verlet_estocastico_3D_intermedio(P[i - 1], &P[i], P[i + 1], Fuerza_Intermedio);
+        verlet_estocastico_3D_extremo(&P[N_particulas - 1], P[N_particulas - 2], Fuerza_Extremo);
+    }
+    
+    //Cambiamos las componentes de la fuerza
+    Fext.x = F_MAX/N_sweep*k;
     LEff_Aux = 0;
     
     
@@ -140,15 +154,13 @@ int main() {
 
             // INTEGRADO
             nsteps++;
-            verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
+            //verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
             for (int i = 1; i < N_particulas - 1; i++)
                 verlet_estocastico_3D_intermedio(P[i - 1], &P[i], P[i + 1], Fuerza_Intermedio);
             verlet_estocastico_3D_extremo(&P[N_particulas - 1], P[N_particulas - 2], Fuerza_Extremo);
             
-            if (t_actual>1000)
-            {   //Ya habiendo termalizado
-            LEff_Aux += (Pesc(Fext,resta(P[N_particulas-1].pos, P[0].pos)))/tmax*dt;
-            }
+            LEff_Aux += (Pesc(Fext,resta(P[N_particulas-1].pos, P[0].pos)))/tmax*dt/(N_particulas)/b;
+
             // CALCULO ENERGIAS
             Actualizar_Energias(P);
             double Ecin_step = 0.0, Epot_step = 0.0;

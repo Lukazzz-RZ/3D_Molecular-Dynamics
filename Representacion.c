@@ -226,6 +226,20 @@ void crear_script_vmd(int N_bloques) {
     for (int i = 2; i <= N_bloques; i++) {
         fprintf(f, "mol addfile results/Data_%05d.xyz type xyz first 0 last -1 step 1 waitfor all 0\n", i);
     }
+    //Apaño de los enlaces
+
+    /*
+    mol bondsrecalc top off
+    topo clearbonds
+    for {set i 0} {$i < 15} {incr i} {
+        topo addbond $i [expr {$i+1}]
+    }
+    */
+    fprintf(f, "\nmol bondsrecalc top off\n");
+    fprintf(f, "topo clearbonds\n");
+    fprintf(f, "for {set i 0} {$i < %d} {incr i} {\n", N_particulas-1);
+    fprintf(f, "topo addbond $i [expr {$i+1}]\n");
+    fprintf(f, "}\n");
 
     // Configuración visual
     fprintf(f, "\ndisplay resetview\n");

@@ -7,8 +7,9 @@
 #include <direct.h> 
 #include <math.h>
 #include <time.h>
-//#define SWEEPMODE
-#define COMPLEXMODEL
+#define SWEEPMODE
+//define COMPLEXMODEL
+//#define ALPHATEST
 
 
 // FORMATO DE TRABAJO
@@ -23,6 +24,8 @@ typedef struct {
 	Vector vel;
 	double Ecin;
 	double Epot;
+	double q;
+
 } Particula;
 
 typedef Vector(*FuncionFuerzaExtremo)(Particula, Particula);
@@ -41,7 +44,7 @@ void Ini_N_Rand(int SEMILLA);
 
 #define PI acos(-1.0)
 #define N_bins 50
-# define N_particulas 64
+# define N_particulas 4
 
 // VARIABLES GLOBALES
 
@@ -61,6 +64,10 @@ extern double rc;
 extern double sigma;
 extern double eps;
 
+extern double theta_0;
+extern double kb;
+
+
 // FUNCIONES
 
 void Inicializar(void);
@@ -71,6 +78,8 @@ void verlet_estocastico_3D_intermedio(Particula P2, Particula* P, Particula P3, 
 double Potencial_Extremo(Particula P1, Particula P2);
 double Potencial_Intermedio(Particula P_ant, Particula P, Particula Psig);
 double V_LennardJones(Particula pi);
+double CoulombV(Particula Pi);
+Vector Fuerza_CoulombV(Particula Pi);
 Vector Fuerza_LennardJones(Particula pi);
 void Actualizar_Energias(Particula* P);
 Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig);

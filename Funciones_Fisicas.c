@@ -17,6 +17,12 @@ double rc;
 double sigma;
 double eps;
 
+
+double theta_0;
+double kb;
+
+char CMode;
+
 // FUNCIONES DE ENERGIA //
 
 double Potencial_Extremo(Particula P1, Particula P2) {
@@ -35,6 +41,9 @@ double Potencial_Extremo(Particula P1, Particula P2) {
 
     double V_LJ= V_LennardJones(P1);
     V_externo +=V_LJ;
+        #ifdef ALPHATEST
+            V_externo += CoulombV(P1);
+        #endif
 
     #endif
 
@@ -64,7 +73,12 @@ double Potencial_Intermedio(Particula P_ant, Particula P, Particula P_sig) {
     #ifdef COMPLEXMODEL
 
     double V_LJ= V_LennardJones(P);
-    V_externo +=2*V_LJ; // Compensar el factor 1/2
+    double V_theta = kb*(1-Pesc(resta(P.pos,P_ant.pos),resta(P_sig.pos,P.pos)));
+    V_externo +=V_LJ + V_theta; // Compensar el factor 1/2
+    
+        #ifdef ALPHATEST
+            V_externo += CoulombV(P);
+        #endif
 
     #endif
 
@@ -83,6 +97,22 @@ double V_LennardJones(Particula pi){
     return V_Aux;
 }
 
+double CoulombV(Particula Pi){
+    double V_Aux = 0;
+    double r;
+    if (Pi.q==0.) return 0;
+    else {
+        for (int j=0; j<N_particulas; j++){
+        r=modulo(resta(Pi.pos,P[j].pos));
+
+            if(r !=0 && P[j].q !=0) //Es decir, no es la misma partícula y la carga es distinta de 0
+            V_Aux += P[j].q*Pi.q/r;
+    }
+    return V_Aux;
+
+
+}
+}
 Vector Fuerza_Extremo(Particula P1, Particula P2) {
     Vector r_rel = {
         P1.pos.x - P2.pos.x,
@@ -109,6 +139,13 @@ Vector Fuerza_Extremo(Particula P1, Particula P2) {
     F.x += F_LJ.x;
     F.y += F_LJ.y;
     F.z += F_LJ.z;
+
+        #ifdef ALPHATEST
+        Vector F_Cl = Fuerza_CoulombV(P1);
+        F.x += F_Cl.x;
+        F.y += F_Cl.y;
+        F.z += F_Cl.z;
+        #endif
 
     #endif
 
@@ -154,9 +191,19 @@ Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig) {
     #ifdef COMPLEXMODEL
 
 	Vector F_LJ = Fuerza_LennardJones(P);
-    F.x += F_LJ.x;
-	F.y += F_LJ.y;
-	F.z += F_LJ.z;
+    Vector v1 = resta(Pant.pos, P.pos);
+    double F_theta = kb/modulo(v1);
+
+    F.x += F_LJ.x + v1.x*F_theta;
+	F.y += F_LJ.y + v1.y*F_theta;
+	F.z += F_LJ.z + v1.z*F_theta;
+
+        #ifdef ALPHATEST
+        Vector F_Cl = Fuerza_CoulombV(P);
+        F.x += F_Cl.x;
+        F.y += F_Cl.y;
+        F.z += F_Cl.z;
+        #endif
 
     #endif
 
@@ -190,6 +237,28 @@ Vector Fuerza_LennardJones(Particula pi) {
     return F;
 }
 
+Vector Fuerza_CoulombV(Particula Pi){
+    Vector F = { 0.0f, 0.0f, 0.0f };
+
+    if (Pi.q==0) return F;
+    double Vi = CoulombV(Pi);
+
+
+    for (int j = 0; j < N_particulas; j++) {
+        if (&P[j] == &Pi) continue;
+
+        // vector separacion
+        Vector rij = resta(Pi.pos, P[j].pos);
+        double r = modulo(rij);
+
+        if (r == 0 || r > b*8 || P[j].q ==0) continue;
+
+        F.x += Vi*rij.x/r/r;
+        F.y += Vi*rij.x/r/r;
+        F.z += Vi*rij.x/r/r;
+
+}
+}
 // ACTUALIZACION DE ENERGIAS //
 
 void Actualizar_Energias(Particula* P) {
