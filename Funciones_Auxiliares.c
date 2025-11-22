@@ -14,7 +14,7 @@ void Inicializar(void) {
     Ini_N_Rand(time(NULL));
     m = 1.0;
     k = 100.0;
-    KbT = 0.5;
+    KbT = 1.0;
     b = 1.0;
     gamma_DP = 1.0;
     dt = 0.01;
@@ -26,7 +26,7 @@ void Inicializar(void) {
     sigma = b / pow(2.0, 1.0 / 6.0);
     //sigma = 0;
     rc = 3 * sigma;
-    eps = 1.;
+    eps = 1.2;
     kb = 1.;
     theta_0 = PI/2;
 
@@ -58,7 +58,7 @@ void Inicializar(void) {
             } 
 		}
 
-        P[j].q = P[j].q*2.5;
+        P[j].q = P[j].q*1.;
         
     }
 }

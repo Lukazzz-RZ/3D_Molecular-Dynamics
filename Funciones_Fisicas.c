@@ -262,7 +262,7 @@ Vector Fuerza_CoulombV(Particula Pi){
 }
 
 Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
-
+    double epsilon = 10e-8;
     Vector F;
         F.x=0;
         F.y=0;
@@ -278,7 +278,11 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
     
     //Redefinir en vuelta 2
     double theta_1 = acos(Pesc(vP_Ant_1,vSig_P_1));
-    double Rot_cte_1 = cos (theta_1 - theta_0)/cos(theta_1);
+
+    double c_1 = cos(theta_1-theta_0);
+    if (fabs(c_1) < epsilon) c_1 = (c_1 >= 0 ? epsilon : -epsilon);
+    double Rot_cte_1 = cos(theta_1)/c_1;
+
     double r_1 = modulo(vSig_P_1);
     Vector z_new_1 = Normalizador(vP_Ant_1);
     Vector a_1 = z_new_1;
@@ -293,7 +297,7 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
     
     F.x += Fx_new_1.x + Fy_new_1.x + Fz_new_1.x;
     F.y += Fx_new_1.y + Fy_new_1.y + Fz_new_1.y;
-    F.x += Fx_new_1.z + Fy_new_1.z + Fz_new_1.z;
+    F.z += Fx_new_1.z + Fy_new_1.z + Fz_new_1.z;
     
     //Ya tenemos los vectores de fuerza en la base que toca
     
@@ -308,9 +312,9 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
 
     double theta_2 = acos(Pesc(vP_Ant_2,vSig_P_2));
 
-    double c = cos(theta_2);
-    if (fabs(c) < 0.01) c = (c >= 0 ? 0.01 : -0.01);
-    double Rot_cte_2 = cos(theta_2 - theta_0) / c;
+    double c_2 = cos(theta_2-theta_0);
+    if (fabs(c_2) < epsilon) c_2 = (c_2 >= 0 ? epsilon : -epsilon);
+    double Rot_cte_2 = cos(theta_2)/c_2;
 
 
     double r_2 = modulo(vSig_P_2);

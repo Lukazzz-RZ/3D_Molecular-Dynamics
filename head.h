@@ -9,7 +9,7 @@
 #include <time.h>
 //#define SWEEPMODE
 #define COMPLEXMODEL
-//#define ALPHATEST
+#define ALPHATEST
 
 
 // FORMATO DE TRABAJO
