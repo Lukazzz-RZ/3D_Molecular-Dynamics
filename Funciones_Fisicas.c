@@ -73,7 +73,8 @@ double Potencial_Intermedio(Particula P_ant, Particula P, Particula P_sig) {
     #ifdef COMPLEXMODEL
 
     double V_LJ= V_LennardJones(P);
-    double V_theta = kb*(1-Pesc(resta(P.pos,P_ant.pos),resta(P_sig.pos,P.pos)));
+    //El 2 ya que hay que tener en cuenta la vuelta
+    double V_theta = 2*kb*(1-Pesc(resta(P.pos,P_ant.pos),resta(P_sig.pos,P.pos)));
     V_externo +=V_LJ + V_theta; // Compensar el factor 1/2
     
         #ifdef ALPHATEST
@@ -192,11 +193,11 @@ Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig) {
 
 	Vector F_LJ = Fuerza_LennardJones(P);
     Vector v1 = resta(Pant.pos, P.pos);
-    double F_theta = kb/modulo(v1);
+    Vector vBF = Fuerza_Bending(Pant, P, Psig);
 
-    F.x += F_LJ.x + v1.x*F_theta;
-	F.y += F_LJ.y + v1.y*F_theta;
-	F.z += F_LJ.z + v1.z*F_theta;
+    F.x += F_LJ.x + vBF.x;
+	F.y += F_LJ.y + vBF.y;
+	F.z += F_LJ.z + vBF.z;
 
         #ifdef ALPHATEST
         Vector F_Cl = Fuerza_CoulombV(P);
@@ -258,6 +259,86 @@ Vector Fuerza_CoulombV(Particula Pi){
         F.z += Vi*rij.x/r/r;
 
 }
+}
+
+Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
+
+    Vector F;
+        F.x=0;
+        F.y=0;
+        F.z=0;
+
+    Vector vP_Ant_1 = resta(P.pos,Pant.pos);
+    Vector vSig_P_1 = resta (Psig.pos,P.pos);
+    
+;
+    //Ten en mente luego copiar todos intercambiarlsos y ya que te ahorras pensar
+
+    //VUELTA 1
+    
+    //Redefinir en vuelta 2
+    double theta_1 = acos(Pesc(vP_Ant_1,vSig_P_1));
+    double Rot_cte_1 = cos (theta_1 - theta_0)/cos(theta_1);
+    double r_1 = modulo(vSig_P_1);
+    Vector z_new_1 = Normalizador(vP_Ant_1);
+    Vector a_1 = z_new_1;
+        if (a_1.x !=0 ) a_1.x = -a_1.x;
+        else a_1.y = -a_1.y;
+    Vector x_new_1 = Normalizador (resta (a_1, Scalar_mult(z_new_1, Pesc(a_1,z_new_1))));
+    Vector y_new_1 = Vprod(x_new_1,z_new_1);
+
+    Vector Fx_new_1 = Scalar_mult(x_new_1, kb*Rot_cte_1*vSig_P_1.z/r_1/r_1/r_1*vSig_P_1.z);
+    Vector Fy_new_1 = Scalar_mult(y_new_1, kb*Rot_cte_1*vSig_P_1.z/r_1/r_1/r_1*vSig_P_1.y);
+    Vector Fz_new_1 = Scalar_mult(z_new_1, kb*Rot_cte_1*(vSig_P_1.y*vSig_P_1.y+vSig_P_1.x*vSig_P_1.x)/r_1/r_1/r_1);
+    
+    F.x += Fx_new_1.x + Fy_new_1.x + Fz_new_1.x;
+    F.y += Fx_new_1.y + Fy_new_1.y + Fz_new_1.y;
+    F.x += Fx_new_1.z + Fy_new_1.z + Fz_new_1.z;
+    
+    //Ya tenemos los vectores de fuerza en la base que toca
+    
+    //VUELTA 2
+    //Mismo troncho que antes, solo que en sentido contrario
+    /*
+    Vector vP_Ant_2 =  resta (P.pos, Psig.pos);
+    Vector vSig_P_2 = resta(Pant.pos, P.pos);
+
+    double theta_2 = acos(Pesc(vP_Ant_2,vSig_P_2));
+
+    double c = cos(theta_2);
+    if (fabs(c) < 0.01) c = (c >= 0 ? 0.01 : -0.01);
+    double Rot_cte_2 = cos(theta_2 - theta_0) / c;
+
+
+    double r_2 = modulo(vSig_P_2);
+    Vector z_new_2 = Normalizador(vP_Ant_2);
+
+        Vector pa_1;
+            pa_1.x = 1.;
+            pa_1.x = 0.;
+            pa_1.x = 0.;
+
+        Vector pa_2;
+            pa_2.x = 0.;
+            pa_2.x = 1.;
+            pa_2.x = 0.;
+
+    Vector a_2 = (fabs(z_new_2.x) < 0.9 ? pa_1 : pa_2);//Podría haber 2 v paralelos?
+
+    Vector x_new_2 = Normalizador (resta (a_2, Scalar_mult(z_new_2, Pesc(a_2,z_new_2))));
+    Vector y_new_2 = Vprod(x_new_2,z_new_2);
+
+    Vector Fx_new_2 = Scalar_mult(x_new_2, kb*Rot_cte_2*vSig_P_2.z/r_2/r_2/r_2*vSig_P_2.z);
+    Vector Fy_new_2 = Scalar_mult(y_new_2, kb*Rot_cte_2*vSig_P_2.z/r_2/r_2/r_2*vSig_P_2.y);
+    Vector Fz_new_2 = Scalar_mult(z_new_2, kb*Rot_cte_2*(vSig_P_2.y*vSig_P_2.y+vSig_P_2.x*vSig_P_2.x)/r_2/r_2/r_2);
+
+    F.x += Fx_new_2.x + Fy_new_2.x + Fz_new_2.x;
+    F.y += Fx_new_2.y + Fy_new_2.y + Fz_new_2.y;
+    F.z += Fx_new_2.z + Fy_new_2.z + Fz_new_2.z;
+
+    */
+   
+    return F;
 }
 // ACTUALIZACION DE ENERGIAS //
 

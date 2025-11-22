@@ -26,8 +26,8 @@ void Inicializar(void) {
     sigma = b / pow(2.0, 1.0 / 6.0);
     //sigma = 0;
     rc = 3 * sigma;
-    eps = 2.;
-    kb = 10;
+    eps = 1/4;
+    kb = 1.;
 
     double q_ant=1.;
 
@@ -65,12 +65,21 @@ void Inicializar(void) {
 // FUNCIONES DE CALCULO VECTORIAL //
 
 double modulo(Vector r){
-    return sqrt(r.x*r.x + r.y*r.y + r.z*r.z);
+    return sqrt(fabs(r.x*r.x + r.y*r.y + r.z*r.z));
 }
 
 double Pesc(Vector r1, Vector r2){
     //NO NORM
-    return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z);
+    return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z)/modulo(r1)/modulo(r2);
+}
+
+Vector Vprod(Vector r1, Vector r2){
+    Vector result;
+    result.x = r1.y*r2.z - r1.z*r2.y;
+    result.y = r1.z*r2.x - r1.x*r2.z;
+    result.z = r1.x*r2.y - r1.y*r2.x;
+
+    return result;
 }
 
 Vector resta(Vector r1, Vector r2){
@@ -79,6 +88,25 @@ Vector resta(Vector r1, Vector r2){
     result.y = r1.y -r2.y;
     result.z = r1.z -r2.z;
 
+    return result;
+}
+
+Vector Normalizador (Vector v1){
+    Vector result;
+    double r = modulo(v1);
+    result.x = v1.x/r;
+    result.y = v1.y/r;
+    result.z = v1.z/r;
+
+    return result;
+
+}
+
+Vector Scalar_mult(Vector r, double lambda){
+    Vector result;
+        result.x = r.x*lambda;
+        result.y = r.y*lambda;
+        result.z = r.z*lambda;
     return result;
 }
 

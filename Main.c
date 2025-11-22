@@ -10,8 +10,8 @@ int main() {
     //Usamos el bloque principal simplemente para termalizar
     SweepDet = 0.16;
 #endif
-    /*
-    int Ndata = (int)(tmax / dt * 0.16);
+    
+    int Ndata = (int)(tmax / dt * SweepDet);
     int Nbloques = 10;
     int pasos_por_bloque = Ndata / Nbloques;
 
@@ -93,7 +93,7 @@ int main() {
     printf("Simulacion completa.\n");
     return 0;
 
-    */
+    
 
     #ifdef SWEEPMODE
         printf("Ejecutando en SIMPLEMODEL...\n");
