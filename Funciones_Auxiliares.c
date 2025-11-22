@@ -26,8 +26,9 @@ void Inicializar(void) {
     sigma = b / pow(2.0, 1.0 / 6.0);
     //sigma = 0;
     rc = 3 * sigma;
-    eps = 1/4;
+    eps = 1.;
     kb = 1.;
+    theta_0 = PI/2;
 
     double q_ant=1.;
 

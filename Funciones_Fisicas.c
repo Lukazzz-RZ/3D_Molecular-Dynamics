@@ -299,9 +299,12 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
     
     //VUELTA 2
     //Mismo troncho que antes, solo que en sentido contrario
-    /*
-    Vector vP_Ant_2 =  resta (P.pos, Psig.pos);
-    Vector vSig_P_2 = resta(Pant.pos, P.pos);
+    
+    Vector vP_Ant_2 =  resta (Psig.pos, P.pos);
+    Vector vSig_P_2 = resta(P.pos, Pant.pos);
+
+    vP_Ant_2 = Scalar_mult(vP_Ant_2, -1.);
+    vSig_P_2 = Scalar_mult(vSig_P_2, -1.);
 
     double theta_2 = acos(Pesc(vP_Ant_2,vSig_P_2));
 
@@ -314,14 +317,14 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
     Vector z_new_2 = Normalizador(vP_Ant_2);
 
         Vector pa_1;
-            pa_1.x = 1.;
             pa_1.x = 0.;
-            pa_1.x = 0.;
+            pa_1.y = 0.;
+            pa_1.z = 1.;
 
         Vector pa_2;
             pa_2.x = 0.;
-            pa_2.x = 1.;
-            pa_2.x = 0.;
+            pa_2.y = 1.;
+            pa_2.z = 0.;
 
     Vector a_2 = (fabs(z_new_2.x) < 0.9 ? pa_1 : pa_2);//Podría haber 2 v paralelos?
 
@@ -336,7 +339,6 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
     F.y += Fx_new_2.y + Fy_new_2.y + Fz_new_2.y;
     F.z += Fx_new_2.z + Fy_new_2.z + Fz_new_2.z;
 
-    */
    
     return F;
 }
