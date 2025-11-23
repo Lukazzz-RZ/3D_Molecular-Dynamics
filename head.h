@@ -90,6 +90,7 @@ Vector CDM_uniforme(Vector* r, int N);
 Vector resta(Vector r1, Vector r2);
 Vector Normalizador (Vector v1);
 Vector Scalar_mult(Vector r, double lambda);
+double Phi_Dd (Particula Pm, Particula Pi, Particula Pp, Particula Ppp );
 double Radio_giro(Particula* P);
 FILE* crear_archivo_xyz(int bloque);
 FILE* crear_archivo_variables(int bloque, const char* cabecera);

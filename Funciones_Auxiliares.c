@@ -70,7 +70,6 @@ double modulo(Vector r){
 }
 
 double Pesc(Vector r1, Vector r2){
-    //NO NORM
     return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z)/modulo(r1)/modulo(r2);
 }
 
@@ -128,7 +127,19 @@ double theta(Vector r1, Vector r2){
     //Devuelve angulo entre 2 vectores en rads entiendo
     return acos(Pesc(r1,r2));
 }
+double Phi_Dd (Particula Pm, Particula Pi, Particula Pp, Particula Ppp ){
+    //Creamos Vectores necesarios
+    Vector Pi_Pm = resta(Pi.pos,Pm.pos);
+    Vector Pp_Pi = resta(Pp.pos, Pi.pos);
+    Vector Pi_Pp = Scalar_mult(Pp_Pi,-1);
+    Vector Ppp_Pp = resta (Ppp.pos,Pp.pos);
 
+    Vector n1 = Vprod(Pi_Pm, Pp_Pi);
+    Vector n2 = resta(Vprod(Pi_Pp,Ppp_Pp), Pp_Pi);
+
+    return Pesc(n1,n2);
+
+}
 // FUNCIONES DE NUMEROS ALEATORIOS //
 
     // Inicializa el generador de numeros aleatorios
