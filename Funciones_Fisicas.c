@@ -268,6 +268,16 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
         F.y=0;
         F.z=0;
 
+            Vector pa_1;
+            pa_1.x = 0.;
+            pa_1.y = 0.;
+            pa_1.z = 1.;
+
+        Vector pa_2;
+            pa_2.x = 0.;
+            pa_2.y = 1.;
+            pa_2.z = 0.;
+
     Vector vP_Ant_1 = resta(P.pos,Pant.pos);
     Vector vSig_P_1 = resta (Psig.pos,P.pos);
     
@@ -285,9 +295,8 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
 
     double r_1 = modulo(vSig_P_1);
     Vector z_new_1 = Normalizador(vP_Ant_1);
-    Vector a_1 = z_new_1;
-        if (a_1.x !=0 ) a_1.x = -a_1.x;
-        else a_1.y = -a_1.y;
+    Vector a_1 = (fabs(z_new_1.x) < 0.9 ? pa_1 : pa_2);
+    
     Vector x_new_1 = Normalizador (resta (a_1, Scalar_mult(z_new_1, Pesc(a_1,z_new_1))));
     Vector y_new_1 = Vprod(x_new_1,z_new_1);
 
@@ -319,16 +328,6 @@ Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
 
     double r_2 = modulo(vSig_P_2);
     Vector z_new_2 = Normalizador(vP_Ant_2);
-
-        Vector pa_1;
-            pa_1.x = 0.;
-            pa_1.y = 0.;
-            pa_1.z = 1.;
-
-        Vector pa_2;
-            pa_2.x = 0.;
-            pa_2.y = 1.;
-            pa_2.z = 0.;
 
     Vector a_2 = (fabs(z_new_2.x) < 0.9 ? pa_1 : pa_2);//Podría haber 2 v paralelos?
 

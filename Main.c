@@ -36,11 +36,13 @@ int main() {
 
             // INTEGRADO
             nsteps++;
+            /*
             verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
             for (int i = 1; i < N_particulas - 1; i++)
                 verlet_estocastico_3D_intermedio(P[i - 1], &P[i], P[i + 1], Fuerza_Intermedio);
             verlet_estocastico_3D_extremo(&P[N_particulas - 1], P[N_particulas - 2], Fuerza_Extremo);
-
+            */
+            Polimer_Updater(P);
             
             // CALCULO ENERGIAS
             Actualizar_Energias(P);

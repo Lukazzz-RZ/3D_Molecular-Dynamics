@@ -9,7 +9,7 @@
 #include <time.h>
 //#define SWEEPMODE
 #define COMPLEXMODEL
-#define ALPHATEST
+//#define ALPHATEST
 
 
 // FORMATO DE TRABAJO
@@ -71,11 +71,13 @@ extern double kb;
 // FUNCIONES
 
 void Inicializar(void);
+void Copia_Polimero(Particula *P_in, Particula *P_out);
 double modulo(Vector r);
 double Pesc(Vector r1, Vector r2);
 Vector Vprod(Vector r1, Vector r2);
 void verlet_estocastico_3D_extremo(Particula* P, Particula P2, FuncionFuerzaExtremo Fuerza);
 void verlet_estocastico_3D_intermedio(Particula P2, Particula* P, Particula P3, FuncionFuerzaIntermedio Fuerza);
+void Polimer_Updater(Particula *P_new);
 double Potencial_Extremo(Particula P1, Particula P2);
 double Potencial_Intermedio(Particula P_ant, Particula P, Particula Psig);
 double V_LennardJones(Particula pi);

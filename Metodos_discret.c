@@ -47,3 +47,16 @@ void verlet_estocastico_3D_intermedio(Particula P2, Particula* P, Particula P3, 
     P->vel.y = P->vel.y * a_coef + dt / (2.0 * m) * (a_coef * F0.y + F1.y) + b_coef / m * ruido.y;
     P->vel.z = P->vel.z * a_coef + dt / (2.0 * m) * (a_coef * F0.z + F1.z) + b_coef / m * ruido.z;
 }
+
+void Polimer_Updater(Particula *P_new){
+    Particula P_old[N_particulas];
+    Copia_Polimero(P_new, P_old);
+
+    //Polimeros idénticos. Basta con pasar en pos no actualizadas el _old y en las que se actualizen el _new
+    
+    //Actualizamos polímero
+    verlet_estocastico_3D_extremo(&P_new[0], P_old[1], Fuerza_Extremo);
+         for (int i = 1; i < N_particulas - 1; i++)
+            verlet_estocastico_3D_intermedio(P_old[i - 1], &P_new[i], P_old[i + 1], Fuerza_Intermedio);
+    verlet_estocastico_3D_extremo(&P_new[N_particulas - 1], P_old[N_particulas - 2], Fuerza_Extremo);
+}

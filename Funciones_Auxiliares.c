@@ -63,6 +63,25 @@ void Inicializar(void) {
     }
 }
 
+void Copia_Polimero(Particula *P_in, Particula *P_out){
+
+    for (int i = 0; i<N_particulas; i++){
+
+        P_out[i].pos.x = P_in[i].pos.x;
+        P_out[i].pos.y = P_in[i].pos.y;
+        P_out[i].pos.z = P_in[i].pos.z;
+        
+        P_out[i].vel.x = P_in[i].vel.x;
+        P_out[i].vel.y = P_in[i].vel.y;
+        P_out[i].vel.z = P_in[i].vel.z;
+
+        P_out[i].Ecin = P_in[i].Ecin;
+        P_out[i].Epot = P_in[i].Epot;
+
+        P_out[i].q = P_in[i].q;
+    }
+}
+
 // FUNCIONES DE CALCULO VECTORIAL //
 
 double modulo(Vector r){
