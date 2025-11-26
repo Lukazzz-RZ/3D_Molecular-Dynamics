@@ -18,7 +18,7 @@ void Inicializar(void) {
     b = 1.0;
     gamma_DP = 1.0;
     dt = 0.01;
-    tmax = 1000.0;
+    tmax = 50000.0;
     Fext.x = 0.0;
     Fext.y = 0.0;
     Fext.z = 0.0;
@@ -26,14 +26,11 @@ void Inicializar(void) {
     sigma = b / pow(2.0, 1.0 / 6.0);
     //sigma = 0;
     rc = 3 * sigma;
-    eps = 1.2;
-    kb = 1.;
-    theta_0 = PI/2;
-
-    double q_ant=1.;
+    eps = 1.0;
 
     for (int j = 0; j < N_particulas; j++) {
-        P[j].pos.x = (double)j;
+		P[j].idx = j;
+        P[j].pos.x = (double)b*(j+1);
         P[j].pos.y = (double)0;
         P[j].pos.z = (double)0;
         P[j].vel.x = (double) j*0.2;
@@ -42,63 +39,25 @@ void Inicializar(void) {
         P[j].Ecin = 0.5 * m * modulo(P[j].vel) * modulo(P[j].vel);
         if (j == 0) {
             P[j].Epot = Potencial_Extremo(P[j], P[j+1]);
-            P[j].q = -1.;
-            q_ant = P[j].q;
-
         }
         else if (j == N_particulas - 1) {
             P[j].Epot = Potencial_Extremo(P[j], P[j-1]);
         }
         else {
             P[j].Epot = Potencial_Intermedio(P[j-1], P[j], P[j+1]);
-            if((j+1)%3==0){
-                P[j].q= -1.*q_ant;
-                q_ant = P[j].q;
-
-            } 
 		}
-
-        P[j].q = P[j].q*1.;
-        
-    }
-}
-
-void Copia_Polimero(Particula *P_in, Particula *P_out){
-
-    for (int i = 0; i<N_particulas; i++){
-
-        P_out[i].pos.x = P_in[i].pos.x;
-        P_out[i].pos.y = P_in[i].pos.y;
-        P_out[i].pos.z = P_in[i].pos.z;
-        
-        P_out[i].vel.x = P_in[i].vel.x;
-        P_out[i].vel.y = P_in[i].vel.y;
-        P_out[i].vel.z = P_in[i].vel.z;
-
-        P_out[i].Ecin = P_in[i].Ecin;
-        P_out[i].Epot = P_in[i].Epot;
-
-        P_out[i].q = P_in[i].q;
     }
 }
 
 // FUNCIONES DE CALCULO VECTORIAL //
 
 double modulo(Vector r){
-    return sqrt(fabs(r.x*r.x + r.y*r.y + r.z*r.z));
+    return sqrt(r.x*r.x + r.y* r.y + r.z* r.z);
 }
 
 double Pesc(Vector r1, Vector r2){
+    //VA NORM
     return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z)/modulo(r1)/modulo(r2);
-}
-
-Vector Vprod(Vector r1, Vector r2){
-    Vector result;
-    result.x = r1.y*r2.z - r1.z*r2.y;
-    result.y = r1.z*r2.x - r1.x*r2.z;
-    result.z = r1.x*r2.y - r1.y*r2.x;
-
-    return result;
 }
 
 Vector resta(Vector r1, Vector r2){
@@ -107,25 +66,6 @@ Vector resta(Vector r1, Vector r2){
     result.y = r1.y -r2.y;
     result.z = r1.z -r2.z;
 
-    return result;
-}
-
-Vector Normalizador (Vector v1){
-    Vector result;
-    double r = modulo(v1);
-    result.x = v1.x/r;
-    result.y = v1.y/r;
-    result.z = v1.z/r;
-
-    return result;
-
-}
-
-Vector Scalar_mult(Vector r, double lambda){
-    Vector result;
-        result.x = r.x*lambda;
-        result.y = r.y*lambda;
-        result.z = r.z*lambda;
     return result;
 }
 
@@ -146,22 +86,10 @@ double theta(Vector r1, Vector r2){
     //Devuelve angulo entre 2 vectores en rads entiendo
     return acos(Pesc(r1,r2));
 }
-double Phi_Dd (Particula Pm, Particula Pi, Particula Pp, Particula Ppp ){
-    //Creamos Vectores necesarios
-    Vector Pi_Pm = resta(Pi.pos,Pm.pos);
-    Vector Pp_Pi = resta(Pp.pos, Pi.pos);
-    Vector Pi_Pp = Scalar_mult(Pp_Pi,-1);
-    Vector Ppp_Pp = resta (Ppp.pos,Pp.pos);
 
-    Vector n1 = Vprod(Pi_Pm, Pp_Pi);
-    Vector n2 = resta(Vprod(Pi_Pp,Ppp_Pp), Pp_Pi);
-
-    return Pesc(n1,n2);
-
-}
 // FUNCIONES DE NUMEROS ALEATORIOS //
 
-    // Inicializa el generador de numeros aleatorios
+
 void Ini_N_Rand(int Seed) {
 
     int INI, FACTOR, SUM, i;
@@ -180,7 +108,6 @@ void Ini_N_Rand(int Seed) {
     return;
 }
 
-    // Generador de numeros aleatorios uniforme en [0,1)
 double N_Rand(void) {
 
     double r;
@@ -197,12 +124,10 @@ double N_Rand(void) {
     return r;
 }
 
-    // Generador de numeros aleatorios uniforme en [a,b)
 double N_Rand_AB(double a, double b) {
     return a + (b - a) * N_Rand();
 }
 
-    // Generador de numeros aleatorios con distribucion gaussiana N(0,1)
 double N_Rand_Gauss() {
     return -sqrt(-2.0 * log(N_Rand())) * cos(2.0 * PI * N_Rand());
 }

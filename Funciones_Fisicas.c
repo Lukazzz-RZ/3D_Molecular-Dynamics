@@ -17,12 +17,6 @@ double rc;
 double sigma;
 double eps;
 
-
-double theta_0;
-double kb;
-
-char CMode;
-
 // FUNCIONES DE ENERGIA //
 
 double Potencial_Extremo(Particula P1, Particula P2) {
@@ -39,11 +33,8 @@ double Potencial_Extremo(Particula P1, Particula P2) {
 
     #ifdef COMPLEXMODEL
 
-    double V_LJ= V_LennardJones(P1);
-    V_externo +=V_LJ;
-        #ifdef ALPHATEST
-            V_externo += CoulombV(P1);
-        #endif
+    double V_LJ= Potencial_LennardJones(P1);
+    V_externo += 2 * V_LJ;
 
     #endif
 
@@ -72,21 +63,15 @@ double Potencial_Intermedio(Particula P_ant, Particula P, Particula P_sig) {
 
     #ifdef COMPLEXMODEL
 
-    double V_LJ= V_LennardJones(P);
-    //El 2 ya que hay que tener en cuenta la vuelta
-    double V_theta = 2*kb*(1-Pesc(resta(P.pos,P_ant.pos),resta(P_sig.pos,P.pos)));
-    V_externo +=V_LJ + V_theta; // Compensar el factor 1/2
-    
-        #ifdef ALPHATEST
-            V_externo += CoulombV(P);
-        #endif
+    double V_LJ= Potencial_LennardJones(P);
+    V_externo +=2*V_LJ; // Compensar el factor 1/2
 
     #endif
 
     return V_elastico + V_externo;
 }
 
-double V_LennardJones(Particula pi){
+double Potencial_LennardJones(Particula pi){
     //Potencial que observa la partícula pi por el resto de las pj
     double V_Aux = 0;
     double r;
@@ -98,22 +83,8 @@ double V_LennardJones(Particula pi){
     return V_Aux;
 }
 
-double CoulombV(Particula Pi){
-    double V_Aux = 0;
-    double r;
-    if (Pi.q==0.) return 0;
-    else {
-        for (int j=0; j<N_particulas; j++){
-        r=modulo(resta(Pi.pos,P[j].pos));
+// FUNCIONES DE FUERZA //
 
-            if(r !=0 && P[j].q !=0) //Es decir, no es la misma partícula y la carga es distinta de 0
-            V_Aux += P[j].q*Pi.q/r;
-    }
-    return V_Aux;
-
-
-}
-}
 Vector Fuerza_Extremo(Particula P1, Particula P2) {
     Vector r_rel = {
         P1.pos.x - P2.pos.x,
@@ -140,13 +111,6 @@ Vector Fuerza_Extremo(Particula P1, Particula P2) {
     F.x += F_LJ.x;
     F.y += F_LJ.y;
     F.z += F_LJ.z;
-
-        #ifdef ALPHATEST
-        Vector F_Cl = Fuerza_CoulombV(P1);
-        F.x += F_Cl.x;
-        F.y += F_Cl.y;
-        F.z += F_Cl.z;
-        #endif
 
     #endif
 
@@ -192,27 +156,19 @@ Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig) {
     #ifdef COMPLEXMODEL
 
 	Vector F_LJ = Fuerza_LennardJones(P);
-    Vector v1 = resta(Pant.pos, P.pos);
-    Vector vBF = Fuerza_Bending(Pant, P, Psig);
-
-    F.x += F_LJ.x + vBF.x;
-	F.y += F_LJ.y + vBF.y;
-	F.z += F_LJ.z + vBF.z;
-
-        #ifdef ALPHATEST
-        Vector F_Cl = Fuerza_CoulombV(P);
-        F.x += F_Cl.x;
-        F.y += F_Cl.y;
-        F.z += F_Cl.z;
-        #endif
+    F.x += F_LJ.x;
+	F.y += F_LJ.y;
+	F.z += F_LJ.z;
 
     #endif
 
     return F;
     }
 
+// TERMINOS EXTRA DE FUERZAS
+
 Vector Fuerza_LennardJones(Particula pi) {
-    Vector F = { 0.0f, 0.0f, 0.0f };
+    Vector F = { 0.0, 0.0, 0.0 };
     double sigma6 = pow(sigma, 6);
     double sigma12 = sigma6 * sigma6;
 
@@ -238,114 +194,32 @@ Vector Fuerza_LennardJones(Particula pi) {
     return F;
 }
 
-Vector Fuerza_CoulombV(Particula Pi){
-    Vector F = { 0.0f, 0.0f, 0.0f };
+// CALCULOS DINAMICOENERGETICOS DE POLIMERO //
 
-    if (Pi.q==0) return F;
-    double Vi = CoulombV(Pi);
+void Calcular_fuerzas(Vector* F, Particula* P) {
 
+    for (int i = 0; i < N_particulas; i++) {
+        F[i].x = 0.0;
+        F[i].y = 0.0;
+        F[i].z = 0.0;
+    }
 
-    for (int j = 0; j < N_particulas; j++) {
-        if (&P[j] == &Pi) continue;
+    if (N_particulas > 1) {
+        Vector Fe0 = Fuerza_Extremo(P[0], P[1]);
+        F[0].x += Fe0.x;   F[0].y += Fe0.y;   F[0].z += Fe0.z;
+    }
+    if (N_particulas > 1) {
+        Vector FeN = Fuerza_Extremo(P[N_particulas - 1], P[N_particulas - 2]);
+        F[N_particulas - 1].x += FeN.x; F[N_particulas - 1].y += FeN.y; F[N_particulas - 1].z += FeN.z;
+    }
 
-        // vector separacion
-        Vector rij = resta(Pi.pos, P[j].pos);
-        double r = modulo(rij);
-
-        if (r == 0 || r > b*8 || P[j].q ==0) continue;
-
-        F.x += Vi*rij.x/r/r;
-        F.y += Vi*rij.x/r/r;
-        F.z += Vi*rij.x/r/r;
-
+    for (int i = 1; i < N_particulas - 1; i++) {
+        Vector Fi = Fuerza_Intermedio(P[i - 1], P[i], P[i + 1]);
+        F[i].x += Fi.x;
+        F[i].y += Fi.y;
+        F[i].z += Fi.z;
+    }
 }
-}
-
-Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig){
-    double epsilon = 10e-8;
-    Vector F;
-        F.x=0;
-        F.y=0;
-        F.z=0;
-
-            Vector pa_1;
-            pa_1.x = 0.;
-            pa_1.y = 0.;
-            pa_1.z = 1.;
-
-        Vector pa_2;
-            pa_2.x = 0.;
-            pa_2.y = 1.;
-            pa_2.z = 0.;
-
-    Vector vP_Ant_1 = resta(P.pos,Pant.pos);
-    Vector vSig_P_1 = resta (Psig.pos,P.pos);
-    
-;
-    //Ten en mente luego copiar todos intercambiarlsos y ya que te ahorras pensar
-
-    //VUELTA 1
-    
-    //Redefinir en vuelta 2
-    double theta_1 = acos(Pesc(vP_Ant_1,vSig_P_1));
-
-    double c_1 = cos(theta_1-theta_0);
-    if (fabs(c_1) < epsilon) c_1 = (c_1 >= 0 ? epsilon : -epsilon);
-    double Rot_cte_1 = cos(theta_1)/c_1;
-
-    double r_1 = modulo(vSig_P_1);
-    Vector z_new_1 = Normalizador(vP_Ant_1);
-    Vector a_1 = (fabs(z_new_1.x) < 0.9 ? pa_1 : pa_2);
-    
-    Vector x_new_1 = Normalizador (resta (a_1, Scalar_mult(z_new_1, Pesc(a_1,z_new_1))));
-    Vector y_new_1 = Vprod(x_new_1,z_new_1);
-
-    Vector Fx_new_1 = Scalar_mult(x_new_1, kb*Rot_cte_1*vSig_P_1.z/r_1/r_1/r_1*vSig_P_1.z);
-    Vector Fy_new_1 = Scalar_mult(y_new_1, kb*Rot_cte_1*vSig_P_1.z/r_1/r_1/r_1*vSig_P_1.y);
-    Vector Fz_new_1 = Scalar_mult(z_new_1, kb*Rot_cte_1*(vSig_P_1.y*vSig_P_1.y+vSig_P_1.x*vSig_P_1.x)/r_1/r_1/r_1);
-    
-    F.x += Fx_new_1.x + Fy_new_1.x + Fz_new_1.x;
-    F.y += Fx_new_1.y + Fy_new_1.y + Fz_new_1.y;
-    F.z += Fx_new_1.z + Fy_new_1.z + Fz_new_1.z;
-    
-    //Ya tenemos los vectores de fuerza en la base que toca
-    
-    //VUELTA 2
-    //Mismo troncho que antes, solo que en sentido contrario
-    
-    Vector vP_Ant_2 =  resta (Psig.pos, P.pos);
-    Vector vSig_P_2 = resta(P.pos, Pant.pos);
-
-    vP_Ant_2 = Scalar_mult(vP_Ant_2, -1.);
-    vSig_P_2 = Scalar_mult(vSig_P_2, -1.);
-
-    double theta_2 = acos(Pesc(vP_Ant_2,vSig_P_2));
-
-    double c_2 = cos(theta_2-theta_0);
-    if (fabs(c_2) < epsilon) c_2 = (c_2 >= 0 ? epsilon : -epsilon);
-    double Rot_cte_2 = cos(theta_2)/c_2;
-
-
-    double r_2 = modulo(vSig_P_2);
-    Vector z_new_2 = Normalizador(vP_Ant_2);
-
-    Vector a_2 = (fabs(z_new_2.x) < 0.9 ? pa_1 : pa_2);//Podría haber 2 v paralelos?
-
-    Vector x_new_2 = Normalizador (resta (a_2, Scalar_mult(z_new_2, Pesc(a_2,z_new_2))));
-    Vector y_new_2 = Vprod(x_new_2,z_new_2);
-
-    Vector Fx_new_2 = Scalar_mult(x_new_2, kb*Rot_cte_2*vSig_P_2.z/r_2/r_2/r_2*vSig_P_2.z);
-    Vector Fy_new_2 = Scalar_mult(y_new_2, kb*Rot_cte_2*vSig_P_2.z/r_2/r_2/r_2*vSig_P_2.y);
-    Vector Fz_new_2 = Scalar_mult(z_new_2, kb*Rot_cte_2*(vSig_P_2.y*vSig_P_2.y+vSig_P_2.x*vSig_P_2.x)/r_2/r_2/r_2);
-
-    F.x += Fx_new_2.x + Fy_new_2.x + Fz_new_2.x;
-    F.y += Fx_new_2.y + Fy_new_2.y + Fz_new_2.y;
-    F.z += Fx_new_2.z + Fy_new_2.z + Fz_new_2.z;
-
-   
-    return F;
-}
-// ACTUALIZACION DE ENERGIAS //
 
 void Actualizar_Energias(Particula* P) {
 
@@ -389,4 +263,12 @@ double Radio_giro(Particula* P) {
     double Rg_squared = suma / N_particulas;
     return sqrt(Rg_squared);
     
+}
+
+double Longitud_efectiva(Particula* P, int norm) {
+	double L = (resta(P[N_particulas - 1].pos, P[0].pos)).x; // PREPARADO PARA FUERZAS EN X, PENDIENTE DE GENERALIZAR
+    if (norm == 0) {
+        return L/(N_particulas-1)/b;
+	}
+    else return L;
 }

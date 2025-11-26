@@ -5,22 +5,17 @@ int main() {
     printf("Ejecutando en COMPLEXMODEL...\n");
 #endif
     Inicializar();
-    double SweepDet = 1.;
-#ifdef SWEEPMODE
-    //Usamos el bloque principal simplemente para termalizar
-    SweepDet = 0.16;
-#endif
-    
-    int Ndata = (int)(tmax / dt * SweepDet);
+
+    int Ndata = (int)(tmax / dt);
     int Nbloques = 10;
     int pasos_por_bloque = Ndata / Nbloques;
-
-    Inicializar();
 
     double Ecin_acum = 0.0;
     double Epot_acum = 0.0;
 	double Rg_acum = 0.0;
-    int nsteps = 0;
+	double Rg2_acum = 0.0;
+	double L_eff_acum = 0.0;
+    long int nsteps = 0;
 
     double buffer[6];
 
@@ -36,13 +31,7 @@ int main() {
 
             // INTEGRADO
             nsteps++;
-            /*
-            verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
-            for (int i = 1; i < N_particulas - 1; i++)
-                verlet_estocastico_3D_intermedio(P[i - 1], &P[i], P[i + 1], Fuerza_Intermedio);
-            verlet_estocastico_3D_extremo(&P[N_particulas - 1], P[N_particulas - 2], Fuerza_Extremo);
-            */
-            Polimer_Updater(P);
+			verlet_estocastico_3D(P);
             
             // CALCULO ENERGIAS
             Actualizar_Energias(P);
@@ -51,12 +40,15 @@ int main() {
 				Ecin_step += P[n].Ecin / (3 * N_particulas); //normalizado por grados de libertad
 				Epot_step += P[n].Epot / (N_particulas - 1); //normalizado por numero de muelles
             }
-            // RADIO DE GIRO
+			// RADIO DE GIRO Y LONGITUD EFECTIVA
             double Rg = Radio_giro(P);
-
+			double Rg2 = Rg * Rg;
+			double L_eff = Longitud_efectiva(P, 0);
             
             // ACUMULADOS
 			Rg_acum += (Rg - Rg_acum) / nsteps;
+			Rg2_acum += (Rg2 - Rg2_acum) / nsteps;
+			L_eff_acum += (L_eff - L_eff_acum) / nsteps;
             Ecin_acum += (Ecin_step - Ecin_acum) / nsteps;
             Epot_acum += (Epot_step - Epot_acum) / nsteps;
 			
@@ -65,12 +57,16 @@ int main() {
             buffer[1] = Ecin_acum;
             buffer[2] = Epot_acum;
             buffer[3] = Rg_acum;
-            buffer[4] = 0.0;
-            buffer[5] = 0.0;
+            buffer[4] = Rg2_acum;
+            buffer[5] = L_eff_acum;
 
             // VOLCADO DE DATOS
             guardar_bloque_xyz(P, f_xyz, total_steps);
-            Escribir_buffer(f_variables, buffer);
+            if (total_steps % 100 == 0) {
+                Escribir_buffer(f_variables, buffer);
+                //printf("Paso %d: t=%.2f, Ecin=%.5f, Epot=%.5f, Rg=%.5f\n",
+                    //total_steps, t_actual, Ecin_acum, Epot_acum, Rg_acum);
+            }
         }
         fclose(f_xyz);
         fclose(f_variables);
@@ -81,34 +77,37 @@ int main() {
     // ESTIMADORES DE TERMALIZADO
     printf("Energia cinetica promedio: %.5f\n", Ecin_acum);
     printf("Energia potencial promedio: %.5f\n", Epot_acum);
-	printf("Radio de giro promedio: %.5f\n", Rg_acum);
+	printf("Longitud efectiva promedio: %.5f\n", L_eff_acum);
+	printf("Radio de giro promedio al cuadrado: %.5f\n", Rg_acum* Rg_acum);
+	printf("Radio de giro al cuadrado promedio: %.5f\n", Rg2_acum);
+
 
 
     // DIBUJADO
+	//Ajuste_Rg_en_b();
     //Ajuste_Rg_en_N();
 	//Ajuste_Rg_en_k();
-    Gnuplot_EnerCons(Nbloques);
+    //Gnuplot_EnerCons(Nbloques);
 	Gnuplot_Rg(Nbloques);
-    crear_script_vmd(Nbloques);
-    system("vmd -e ver_polimero.vmd");
+	Gnuplot_L_eff(Nbloques);
+    //crear_script_vmd(Nbloques);
+    //system("vmd -e ver_polimero.vmd");
 
     printf("Simulacion completa.\n");
     return 0;
-
-    
 
     #ifdef SWEEPMODE
         printf("Ejecutando en SIMPLEMODEL...\n");
 
         Inicializar();
 
-    int N_sweep = 50;
-    double F_MAX = 5.;
+
+    int N_sweep = 40;
+    double F_MAX = 1.;
     double LEff_Aux;
     char Nomfich [40];
-        sprintf(Nomfich, "Al_ForceSweep_b%.3f_N%d.txt", b, N_particulas);
+        sprintf(Nomfich, "ForceSweep_b%.3f_N%d.txt", b, N_particulas);
     FILE *fout = fopen(Nomfich, "wt");
-    double t_term = 1000;
 
 
     int Ndata = (int)(tmax / dt);
@@ -119,20 +118,13 @@ int main() {
 
     printf("Actualmente %3.f%\n", (double)k/(N_sweep-1)*100.0);
     //Inicializamos en cada bucle para asegurarnos de que todo va bien
-
-    
-    //Termalizado
     Inicializar();
-    
-    for (int h=0; h<(int)(t_term/dt); h++){
-        verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
-            for (int i = 1; i < N_particulas - 1; i++)
-                verlet_estocastico_3D_intermedio(P[i - 1], &P[i], P[i + 1], Fuerza_Intermedio);
-        verlet_estocastico_3D_extremo(&P[N_particulas - 1], P[N_particulas - 2], Fuerza_Extremo);
-    }
-    
+
     //Cambiamos las componentes de la fuerza
-    Fext.x = F_MAX/N_sweep*k;
+    
+    Fext.x = -F_MAX/N_sweep*k;
+    Fext.y = -F_MAX/N_sweep*k;
+    Fext.z = -F_MAX/N_sweep*k;
     LEff_Aux = 0;
     
     
@@ -156,13 +148,15 @@ int main() {
 
             // INTEGRADO
             nsteps++;
-            //verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
+            verlet_estocastico_3D_extremo(&P[0], P[1], Fuerza_Extremo);
             for (int i = 1; i < N_particulas - 1; i++)
                 verlet_estocastico_3D_intermedio(P[i - 1], &P[i], P[i + 1], Fuerza_Intermedio);
             verlet_estocastico_3D_extremo(&P[N_particulas - 1], P[N_particulas - 2], Fuerza_Extremo);
             
-            LEff_Aux += (Pesc(Fext,resta(P[N_particulas-1].pos, P[0].pos)))/tmax*dt/(N_particulas)/b;
-
+            if (t_actual>1000)
+            {   //Ya habiendo termalizado
+            LEff_Aux += (Pesc(Fext,resta(P[N_particulas-1].pos, P[0].pos)))/tmax*dt;
+            }
             // CALCULO ENERGIAS
             Actualizar_Energias(P);
             double Ecin_step = 0.0, Epot_step = 0.0;

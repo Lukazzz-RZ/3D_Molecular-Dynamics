@@ -107,6 +107,17 @@ void Gnuplot_Rg(int bloques) {
         "set ylabel 'Rg (promedio)'\n"
         "set grid\n"
         "set style line 1 lc rgb '#228B22' lw 2\n"
+    );
+
+    // >>> Correcto: calcular rango ANTES del output y plot <<<
+    fprintf(pfileout,
+        "stats 'results/Variables_%05d.dat' using 4 nooutput\n"
+        "set yrange [STATS_min*0.9:STATS_max*1.1]\n",
+        bloques
+    );
+
+    // >>> Después ya viene el output y el plot <<<
+    fprintf(pfileout,
         "set output 'results/Radio_giro.png'\n"
         "plot \\\n"
     );
@@ -130,19 +141,69 @@ void Gnuplot_Rg(int bloques) {
     fprintf(pfileout, "unset output\n");
     fclose(pfileout);
 
-
     system("gnuplot -persist Rg.plt");
     printf("Grafica del radio de giro generada con exito.\n");
+}
+
+void Gnuplot_L_eff(int bloques) {
+    FILE* pfileout = fopen("L_eff.plt", "w");
+    if (!pfileout) {
+        perror("Error al crear L_eff.plt");
+        return;
+    }
+
+    fprintf(pfileout,
+        "set terminal pngcairo size 1350,900 enhanced\n"
+        "set xlabel 't'\n"
+        "set ylabel 'Longitud normalizada (promedio)'\n"
+        "set grid\n"
+        "set style line 1 lc rgb '#228B22' lw 2\n"
+    );
+
+    // >>> Correcto: calcular rango ANTES del output y plot <<<
+    fprintf(pfileout,
+        "stats 'results/Variables_%05d.dat' using 4 nooutput\n",
+        bloques
+    );
+
+    // >>> Después ya viene el output y el plot <<<
+    fprintf(pfileout,
+        "set output 'results/L_eff.png'\n"
+        "plot \\\n"
+    );
+
+    for (int b = 1; b <= bloques; b++) {
+        char nombre_fich[64];
+        snprintf(nombre_fich, sizeof(nombre_fich), "results/Variables_%05d.dat", b);
+
+        fprintf(pfileout,
+            "'%s' using 1:6 with lines ls 1 %s",
+            nombre_fich,
+            (b == 1 ? "title 'Longitud normalizada (promedio)'" : "notitle")
+        );
+
+        if (b < bloques)
+            fprintf(pfileout, ",\\\n");
+        else
+            fprintf(pfileout, "\n");
+    }
+
+    fprintf(pfileout, "unset output\n");
+    fclose(pfileout);
+
+    system("gnuplot -persist L_eff.plt");
+    printf("Grafica de longitud efectiva generada con exito.\n");
 }
 
 void Ajuste_Rg_en_N() {
 
     double beta = 1.0 / KbT;
-    double l2 = (b * b * b * b + 6 * b * b / (beta * k) + 3.0 / (beta * k * beta * k)) / (b * b + 1.0 / (beta * k));
+    double l2 = (b * b * b * b + 6 * b * b / (beta * k) + 3.0 / (beta * k * beta * k)) /
+        (b * b + 1.0 / (beta * k));
 
-    FILE* pfileout = fopen("Rg_ajuste.plt", "w");
+    FILE* pfileout = fopen("Rg_ajuste_N.plt", "w");
     if (!pfileout) {
-        perror("Error al crear Rg_ajuste.plt");
+        perror("Error al crear Rg_ajuste_N.plt");
         return;
     }
 
@@ -154,21 +215,19 @@ void Ajuste_Rg_en_N() {
         "set ylabel 'Rg^2'\n"
         "set grid\n"
         "set key top left\n"
-        "set style line 1 lc rgb '#dd181f' lw 2 lt 1\n"
-        "set style line 2 lc rgb '#0060ad' lw 2 lt 1\n"
-        "set style line 3 lc rgb '#00aa00' lw 2 lt 1\n"
+        "\n"
         "f_ajuste(x) = %.10f*(x - 1.0/x)/6\n"
         "f_teorica(x) = %.10f * x / 6\n"
-        "plot 'results/Rg_vs_N.txt' using 1:($2*$2) with points pt 7 ps 1.5 lc rgb '#dd181f' title 'Datos', \\\n"
-        "     f_ajuste(x) with lines ls 2 title 'Dependencia Teorica', \\\n"
-        "     f_teorica(x) with lines ls 3 title 'Dependencia Aproximada'\n",
+        "\n"
+        "plot 'results/Rg_vs_N.txt' using 1:2 with points pt 2 ps 3 lw 3 lc rgb '#dd181f' title '<Rg^2>', \\\n"
+        "     'results/Rg_vs_N.txt' using 1:3 with points pt 1 ps 3 lw 3 lc rgb '#9900FF' title '<Rg>^2', \\\n"
+        "     f_ajuste(x) with lines lw 2 lc rgb '#0060ad' title 'Dependencia Teorica', \\\n"
+        "     f_teorica(x) with lines lw 2 lc rgb '#00aa00' title 'Dependencia Aproximada'\n",
         l2, b * b
     );
 
     fclose(pfileout);
-
-    // Ejecutar gnuplot
-    system("gnuplot Rg_ajuste.plt");
+    system("gnuplot Rg_ajuste_N.plt");
 
     printf("Grafica generada: results/Rg_vs_N.png\n");
 }
@@ -193,23 +252,61 @@ void Ajuste_Rg_en_k() {
         "set ylabel 'Rg^2'\n"
         "set grid\n"
         "set key top left\n"
-        "set style line 1 lc rgb '#dd181f' lw 2 lt 1\n"
-        "set style line 2 lc rgb '#0060ad' lw 2 lt 1\n"
-        "set style line 3 lc rgb '#00aa00' lw 2 lt 1\n"
+        "\n"
         "f_ajuste(x) = ((%f + 6*%f/(%f*x) + 3/( (%f*x)**2 )) / (%f + 1/(%f*x))) * ((%d - 1.0/%d)/6)\n"
         "f_teorica(x) = %f / 6 * (%d - 1.0/%d)\n"
-        "plot 'results/Rg_vs_ke.txt' using 1:($2*$2) with points pt 7 ps 1.5 lc rgb '#dd181f' title 'Datos', \\\n"
-        "     f_ajuste(x) with lines ls 2 title 'Dependencia Teorica', \\\n"
-        "     f_teorica(x) with lines ls 3 title 'Dependencia Aproximada'\n",
-        b4, b2, beta, beta, b2, beta, N_particulas, N_particulas,
+        "\n"
+        "plot 'results/Rg_vs_ke.txt' using 1:2 with points pt 2 ps 3 lw 3 lc rgb '#dd181f' title '<Rg^2>', \\\n"
+        "     'results/Rg_vs_ke.txt' using 1:3 with points pt 1 ps 3 lw 3 lc rgb '#0060ad' title '<Rg>^2', \\\n"
+        "     f_ajuste(x) with lines lw 2 lc rgb '#0060ad' title 'Dependencia Teorica', \\\n"
+        "     f_teorica(x) with lines lw 2 lc rgb '#00aa00' title 'Dependencia Aproximada'\n",
+        b4, b2, beta, beta, b2, beta,
+        N_particulas, N_particulas,
         b2, N_particulas, N_particulas
     );
 
     fclose(pfileout);
-
     system("gnuplot Rg_ajuste_ke.plt");
 
     printf("Grafica generada: results/Rg_vs_ke.png\n");
+}
+
+void Ajuste_Rg_en_b() {
+
+    FILE* pfileout = fopen("Rg_ajuste_b.plt", "w");
+    if (!pfileout) {
+        perror("Error al crear Rg_ajuste_b.plt");
+        return;
+    }
+
+    double beta = 1.0 / KbT;
+
+    fprintf(pfileout,
+        "set terminal pngcairo size 1350,900 enhanced font 'Arial,14'\n"
+        "set output 'results/Rg_vs_b.png'\n"
+        "set title 'Radio de giro vs b'\n"
+        "set xlabel 'b'\n"
+        "set ylabel 'Rg^2'\n"
+        "set grid\n"
+        "set key top left\n"
+        "\n"
+        "f_ell2(x) = (x**4 + 6*x*x/(%f*%f) + 3/( (%f*%f)**2 )) / (x*x + 1/(%f*%f))\n"
+        "f_ajuste(x) = f_ell2(x) * (%d - 1.0/%d) / 6\n"
+        "f_teorica(x) = (x*x) * (%d - 1.0/%d) / 6\n"
+        "\n"
+        "plot 'results/Rg_vs_b.txt' using 1:2 with points pt 2 ps 3 lw 3 lc rgb '#dd181f' title '<Rg^2>', \\\n"
+        "     'results/Rg_vs_b.txt' using 1:3 with points pt 1 ps 3 lw 3 lc rgb '#0060ad' title '<Rg>^2', \\\n"
+        "     f_ajuste(x) with lines lw 2 lc rgb '#0060ad' title 'Dependencia Teorica', \\\n"
+        "     f_teorica(x) with lines lw 2 lc rgb '#00aa00' title 'Dependencia Aproximada'\n",
+        beta, k, beta, k, beta, k,
+        N_particulas, N_particulas,
+        N_particulas, N_particulas
+    );
+
+    fclose(pfileout);
+    system("gnuplot Rg_ajuste_b.plt");
+
+    printf("Grafica generada: results/Rg_vs_b.png\n");
 }
 
 void crear_script_vmd(int N_bloques) {
@@ -237,7 +334,7 @@ void crear_script_vmd(int N_bloques) {
     */
     fprintf(f, "\nmol bondsrecalc top off\n");
     fprintf(f, "topo clearbonds\n");
-    fprintf(f, "for {set i 0} {$i < %d} {incr i} {\n", N_particulas-1);
+    fprintf(f, "for {set i 0} {$i < %d} {incr i} {\n", N_particulas - 1);
     fprintf(f, "topo addbond $i [expr {$i+1}]\n");
     fprintf(f, "}\n");
 
