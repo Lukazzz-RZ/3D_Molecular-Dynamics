@@ -63,6 +63,7 @@ void verlet_estocastico_3D(Particula* P) {
 
     // ---------- 1) Fuerzas iniciales ----------
     Calcular_fuerzas(F0, P);
+    
 
     // ---------- 2) Ruido ----------
     for (int i = 0; i < N_particulas; i++) {

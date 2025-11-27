@@ -14,11 +14,11 @@ void Inicializar(void) {
     Ini_N_Rand(time(NULL));
     m = 1.0;
     k = 100.0;
-    KbT = 1.0;
-    b = 1.0;
+    KbT = 0.2;
+    b = 1.5;
     gamma_DP = 1.0;
     dt = 0.01;
-    tmax = 50000.0;
+    tmax = 1000.0;
     Fext.x = 0.0;
     Fext.y = 0.0;
     Fext.z = 0.0;
@@ -27,6 +27,12 @@ void Inicializar(void) {
     //sigma = 0;
     rc = 3 * sigma;
     eps = 1.0;
+
+    kb = 1.;
+    theta_0 = PI/3;
+    Fold_Ct = 3.6;
+    Q_ct = 1.;
+    double q_ant=1.;
 
     for (int j = 0; j < N_particulas; j++) {
 		P[j].idx = j;
@@ -39,13 +45,20 @@ void Inicializar(void) {
         P[j].Ecin = 0.5 * m * modulo(P[j].vel) * modulo(P[j].vel);
         if (j == 0) {
             P[j].Epot = Potencial_Extremo(P[j], P[j+1]);
+            P[j].q = -1.;
+            q_ant = P[j].q;
         }
         else if (j == N_particulas - 1) {
             P[j].Epot = Potencial_Extremo(P[j], P[j-1]);
         }
         else {
             P[j].Epot = Potencial_Intermedio(P[j-1], P[j], P[j+1]);
+             if((j+1)%3==0){
+                P[j].q= -1.*q_ant;
+                q_ant = P[j].q;
+            } 
 		}
+        P[j].q *= Q_ct;
     }
 }
 
@@ -60,12 +73,46 @@ double Pesc(Vector r1, Vector r2){
     return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z)/modulo(r1)/modulo(r2);
 }
 
+
+double Pesc_NoNorm(Vector r1, Vector r2){
+    return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z);
+}
+
+Vector Vprod(Vector r1, Vector r2){
+    Vector result;
+    result.x = r1.y*r2.z - r1.z*r2.y;
+    result.y = r1.z*r2.x - r1.x*r2.z;
+    result.z = r1.x*r2.y - r1.y*r2.x;
+
+    return result;
+}
+
 Vector resta(Vector r1, Vector r2){
     Vector result;
     result.x = r1.x -r2.x;
     result.y = r1.y -r2.y;
     result.z = r1.z -r2.z;
 
+    return result;
+}
+
+
+Vector Normalizador (Vector v1){
+    Vector result;
+    double r = modulo(v1);
+    result.x = v1.x/r;
+    result.y = v1.y/r;
+    result.z = v1.z/r;
+
+    return result;
+
+}
+
+Vector Scalar_mult(Vector r, double lambda){
+    Vector result;
+        result.x = r.x*lambda;
+        result.y = r.y*lambda;
+        result.z = r.z*lambda;
     return result;
 }
 

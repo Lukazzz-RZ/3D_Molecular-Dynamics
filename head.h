@@ -8,8 +8,9 @@
 #include <math.h>
 #include <time.h>
 //#define SWEEPMODE
-//#define COMPLEXMODEL
-
+#define ALPHATEST
+#define COMPLEXMODEL
+#define DIHEDRICAL
 
 // FORMATO DE TRABAJO
 typedef struct {
@@ -24,6 +25,7 @@ typedef struct {
 	Vector vel;
 	double Ecin;
 	double Epot;
+	double q;
 } Particula;
 
 typedef Vector(*FuncionFuerzaExtremo)(Particula, Particula);
@@ -42,7 +44,7 @@ void Ini_N_Rand(int SEMILLA);
 
 #define PI acos(-1.0)
 #define N_bins 50
-# define N_particulas 4
+# define N_particulas 32
 
 // VARIABLES GLOBALES
 
@@ -62,22 +64,42 @@ extern double rc;
 extern double sigma;
 extern double eps;
 
+extern double kb; 
+extern double theta_0;
+extern double Fold_Ct;
+extern double Q_ct;
+
 // FUNCIONES
 
 void Inicializar(void);
+
 double modulo(Vector r);
 double Pesc(Vector r1, Vector r2);
+double Pesc_NoNorm(Vector r1, Vector r2);
+
+
 void verlet_estocastico_3D_extremo(Particula* P, Particula P2, FuncionFuerzaExtremo Fuerza);
 void verlet_estocastico_3D_intermedio(Particula P2, Particula* P, Particula P3, FuncionFuerzaIntermedio Fuerza);
 double Potencial_Extremo(Particula P1, Particula P2);
 double Potencial_Intermedio(Particula P_ant, Particula P, Particula Psig);
 double Potencial_LennardJones(Particula pi);
-Vector Fuerza_LennardJones(Particula pi);
+double CoulombV(Particula Pi);
+//double Vdih(Particula mm, Particula m, Particula i, Particula p, Particula pp);
+
 void Actualizar_Energias(Particula* P);
+
 Vector Fuerza_Intermedio(Particula Pant, Particula P, Particula Psig);
 Vector Fuerza_Extremo(Particula P1, Particula P2);
+Vector Fuerza_LennardJones(Particula pi);
+Vector Fuerza_CoulombV(Particula Pi);
+Vector Fuerza_Bending(Particula Pant, Particula P, Particula Psig);
+
 Vector CDM_uniforme(Vector* r, int N);
 Vector resta(Vector r1, Vector r2);
+Vector Vprod(Vector r1, Vector r2);
+Vector Normalizador (Vector v1);
+Vector Scalar_mult(Vector r, double lambda);
+
 double Radio_giro(Particula* P);
 FILE* crear_archivo_xyz(int bloque);
 FILE* crear_archivo_variables(int bloque, const char* cabecera);

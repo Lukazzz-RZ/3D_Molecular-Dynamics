@@ -18,8 +18,17 @@ int main() {
     long int nsteps = 0;
 
     double buffer[6];
-
+    //Termalización de energías (Estado desordenado)
+ 
+    double t_Term = 1000;
+    double kbT_Term = 1.0;
+    KbT = kbT_Term;
+    printf("Adquiriendo configuracion aleatoria del polimero, kbT = %.3f\n", kbT_Term);
+    for (int h = 0; h < (int)(t_Term/dt); h++) verlet_estocastico_3D (P);
     // BLOQUE DE ACTUALIZACION //
+    //Recordemos cambiar kbT
+
+    KbT = 0.1;
     for (int j = 0; j < Nbloques; j++) {
 
         FILE* f_xyz = crear_archivo_xyz(j + 1);
@@ -90,8 +99,8 @@ int main() {
     //Gnuplot_EnerCons(Nbloques);
 	Gnuplot_Rg(Nbloques);
 	Gnuplot_L_eff(Nbloques);
-    //crear_script_vmd(Nbloques);
-    //system("vmd -e ver_polimero.vmd");
+    crear_script_vmd(Nbloques);
+    system("vmd -e ver_polimero.vmd");
 
     printf("Simulacion completa.\n");
     return 0;
