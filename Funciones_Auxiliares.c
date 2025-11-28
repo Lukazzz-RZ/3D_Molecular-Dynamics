@@ -14,50 +14,61 @@ void Inicializar(void) {
     Ini_N_Rand(time(NULL));
     m = 1.0;
     k = 100.0;
-    KbT = 0.2;
-    b = 1.5;
+    KbT = 1.0;
+    b = 1.0;
     gamma_DP = 1.0;
-    dt = 0.01;
-    tmax = 1000.0;
+    dt = 0.001;
+    tmax = 50.0;
     Fext.x = 0.0;
     Fext.y = 0.0;
     Fext.z = 0.0;
 
     sigma = b / pow(2.0, 1.0 / 6.0);
-    //sigma = 0;
     rc = 3 * sigma;
     eps = 1.0;
 
-    kb = 1.;
-    theta_0 = PI/3;
-    Fold_Ct = 3.6;
-    Q_ct = 1.;
-    double q_ant=1.;
+	permitivity = 0.0;
+	Q_ct = 0.0; 
 
+	kb = 50.0;
+    theta_0 = PI + 30 * PI/180;
+
+	kb_dih = 5.0;
+    phi_0 = 20 * PI / 180;
+    mult = 1;
+
+    double q_ant = 1.;
+    double rad = 1.5;
     for (int j = 0; j < N_particulas; j++) {
-		P[j].idx = j;
-        P[j].pos.x = (double)b*(j+1);
-        P[j].pos.y = (double)0;
-        P[j].pos.z = (double)0;
-        P[j].vel.x = (double) j*0.2;
-        P[j].vel.y = (double)j * 0.2;
-        P[j].vel.z = (double)j * 0.2;
+        P[j].idx = j;
+        double angle = j * theta_0;
+        /*P[j].pos.x = b * j;                    
+        P[j].pos.y = rad * cos(angle);       
+        P[j].pos.z = rad * sin(angle);  */
+        P[j].pos.x = b * (double)j;
+        P[j].pos.y = 0;
+        P[j].pos.z = 0;
+        P[j].vel.x = 0.0;
+        P[j].vel.y = 0.0;
+        P[j].vel.z = 0.0;
+
         P[j].Ecin = 0.5 * m * modulo(P[j].vel) * modulo(P[j].vel);
+       
         if (j == 0) {
-            P[j].Epot = Potencial_Extremo(P[j], P[j+1]);
+            P[j].Epot = Potencial_Extremo(P[j], P[j + 1]);
             P[j].q = -1.;
             q_ant = P[j].q;
         }
         else if (j == N_particulas - 1) {
-            P[j].Epot = Potencial_Extremo(P[j], P[j-1]);
+            P[j].Epot = Potencial_Extremo(P[j], P[j - 1]);
         }
         else {
-            P[j].Epot = Potencial_Intermedio(P[j-1], P[j], P[j+1]);
-             if((j+1)%3==0){
-                P[j].q= -1.*q_ant;
+            P[j].Epot = Potencial_Intermedio(P[j - 1], P[j], P[j + 1]);
+            if ((j + 1) % 3 == 0) {
+                P[j].q = -1. * q_ant;
                 q_ant = P[j].q;
-            } 
-		}
+            }
+        }
         P[j].q *= Q_ct;
     }
 }
@@ -68,22 +79,40 @@ double modulo(Vector r){
     return sqrt(r.x*r.x + r.y* r.y + r.z* r.z);
 }
 
-double Pesc(Vector r1, Vector r2){
+double Pesc_Norm(Vector r1, Vector r2){
     //VA NORM
     return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z)/modulo(r1)/modulo(r2);
 }
 
-
-double Pesc_NoNorm(Vector r1, Vector r2){
-    return (r1.x*r2.x+r1.y*r2.y+r1.z*r2.z);
+double Pesc_NoNorm(Vector r1, Vector r2) {
+    return (r1.x * r2.x + r1.y * r2.y + r1.z * r2.z);
 }
 
-Vector Vprod(Vector r1, Vector r2){
+Vector Pvect(Vector r1, Vector r2) {
     Vector result;
-    result.x = r1.y*r2.z - r1.z*r2.y;
-    result.y = r1.z*r2.x - r1.x*r2.z;
-    result.z = r1.x*r2.y - r1.y*r2.x;
+    result.x = r1.y * r2.z - r1.z * r2.y;
+    result.y = r1.z * r2.x - r1.x * r2.z;
+    result.z = r1.x * r2.y - r1.y * r2.x;
 
+    return result;
+}
+
+Vector Normalize(Vector v1) {
+    Vector result;
+    double r = modulo(v1);
+    result.x = v1.x / r;
+    result.y = v1.y / r;
+    result.z = v1.z / r;
+
+    return result;
+
+}
+
+Vector Scalar_mult(Vector r, double lambda) {
+    Vector result;
+    result.x = r.x * lambda;
+    result.y = r.y * lambda;
+    result.z = r.z * lambda;
     return result;
 }
 
@@ -93,26 +122,6 @@ Vector resta(Vector r1, Vector r2){
     result.y = r1.y -r2.y;
     result.z = r1.z -r2.z;
 
-    return result;
-}
-
-
-Vector Normalizador (Vector v1){
-    Vector result;
-    double r = modulo(v1);
-    result.x = v1.x/r;
-    result.y = v1.y/r;
-    result.z = v1.z/r;
-
-    return result;
-
-}
-
-Vector Scalar_mult(Vector r, double lambda){
-    Vector result;
-        result.x = r.x*lambda;
-        result.y = r.y*lambda;
-        result.z = r.z*lambda;
     return result;
 }
 
@@ -131,7 +140,7 @@ Vector CDM_uniforme(Vector* r, int N) {
 
 double theta(Vector r1, Vector r2){
     //Devuelve angulo entre 2 vectores en rads entiendo
-    return acos(Pesc(r1,r2));
+    return acos(Pesc_Norm(r1,r2));
 }
 
 // FUNCIONES DE NUMEROS ALEATORIOS //

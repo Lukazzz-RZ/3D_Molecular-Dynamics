@@ -195,6 +195,46 @@ void Gnuplot_L_eff(int bloques) {
     printf("Grafica de longitud efectiva generada con exito.\n");
 }
 
+void Ajuste_L_eff_en_Fx() {
+
+    double beta = 1.0 / KbT; // 1/(k_B T)
+
+    FILE* pfileout = fopen("L_eff_ajuste_Fx.plt", "w");
+    if (!pfileout) {
+        perror("Error al crear L_eff_ajuste_Fx.plt");
+        return;
+    }
+
+    fprintf(pfileout,
+        "set terminal pngcairo size 1350,900 enhanced font 'Arial,14'\n"
+        "set output 'results/L_eff_vs_Fx.png'\n"
+        "set title 'Longitud Efectiva vs Fx'\n"
+        "set xlabel 'Fx'\n"
+        "set ylabel 'L_{eff}'\n"
+        "set grid\n"
+        "set key bottom right\n"
+        "set yrange [0:1.5]\n"
+        "\n"
+        "# Definir coth para Gnuplot\n"
+        "coth(x) = cosh(x)/sinh(x)\n"
+        "\n"
+        "# Funcion de ajuste Langevin\n"
+        "f_ajuste(Fx) = (coth(%f * Fx) - 1/(%f * Fx) + Fx/%f)\n"
+        "\n"
+        "plot f_ajuste(x) with lines lw 2 lc rgb '#00aa00' title 'Teoria Langevin', \\\n"
+        "     'results/L_eff_vs_Fx.txt' using 1:2 with points pt 2 ps 3 lw 3 lc rgb '#dd181f' title 'N=4', \\\n"
+        "     'results/L_eff_vs_Fx.txt' using 1:3 with points pt 1 ps 4 lw 3 lc rgb '#0060ad' title 'N=10', \\\n"
+        "     'results/L_eff_vs_Fx.txt' using 1:4 with points pt 7 ps 1 lw 3 lc rgb '#FF8800' title 'N=30'\n",
+        beta * b, beta * b, b*k
+    );
+
+    fclose(pfileout);
+    system("gnuplot L_eff_ajuste_Fx.plt");
+
+    printf("Grafica generada: results/L_eff_vs_Fx.png\n");
+}
+
+
 void Ajuste_Rg_en_N() {
 
     double beta = 1.0 / KbT;
