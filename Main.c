@@ -9,7 +9,7 @@ int main() {
     Inicializar();
 
     int Ndata = (int)(tmax / dt);
-    int Nbloques = 10;
+    int Nbloques = 20;
     int pasos_por_bloque = Ndata / Nbloques;
 
     double Ecin_acum = 0.0;

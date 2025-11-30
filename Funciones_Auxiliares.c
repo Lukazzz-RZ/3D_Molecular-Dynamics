@@ -13,12 +13,12 @@ void Inicializar(void) {
     _mkdir("results");
     Ini_N_Rand(time(NULL));
     m = 1.0;
-    k = 100.0;
+    k = 200.0;
     KbT = 1.0;
     b = 1.0;
     gamma_DP = 1.0;
     dt = 0.001;
-    tmax = 50.0;
+    tmax = 25.0;
     Fext.x = 0.0;
     Fext.y = 0.0;
     Fext.z = 0.0;
@@ -27,46 +27,50 @@ void Inicializar(void) {
     rc = 3 * sigma;
     eps = 1.0;
 
-	permitivity = 0.0;
-	Q_ct = 0.0; 
+	permitivity = 0.1;
+	Q_ct = 1.0; 
 
-	kb = 50.0;
+	kb = 100.0;
     theta_0 = PI + 30 * PI/180;
 
-	kb_dih = 5.0;
-    phi_0 = 20 * PI / 180;
+	kb_dih = 10.0;
+    phi_0 = 10 * PI / 180;
     mult = 1;
 
+    double radius = 10 * b;       
+    double pitch = 5 * b;    
+    double angle_step = 45.0;
     double q_ant = 1.;
-    double rad = 1.5;
     for (int j = 0; j < N_particulas; j++) {
         P[j].idx = j;
-        double angle = j * theta_0;
-        /*P[j].pos.x = b * j;                    
-        P[j].pos.y = rad * cos(angle);       
-        P[j].pos.z = rad * sin(angle);  */
-        P[j].pos.x = b * (double)j;
-        P[j].pos.y = 0;
-        P[j].pos.z = 0;
+        double theta = PI/180 * (j * angle_step);
+        P[j].pos.x = radius * cos(theta);
+        P[j].pos.y = radius * sin(theta);
+        P[j].pos.z = pitch * j / (2 * PI);
         P[j].vel.x = 0.0;
         P[j].vel.y = 0.0;
         P[j].vel.z = 0.0;
 
         P[j].Ecin = 0.5 * m * modulo(P[j].vel) * modulo(P[j].vel);
        
-        if (j == 0) {
-            P[j].Epot = Potencial_Extremo(P[j], P[j + 1]);
-            P[j].q = -1.;
-            q_ant = P[j].q;
-        }
-        else if (j == N_particulas - 1) {
-            P[j].Epot = Potencial_Extremo(P[j], P[j - 1]);
+        if (j == 0 || j == N_particulas - 1) {
+            P[j].Epot = (j == 0) ?
+                Potencial_Extremo(P[j], P[j + 1]) :
+                Potencial_Extremo(P[j], P[j - 1]);
+            P[j].q = 0.;
         }
         else {
             P[j].Epot = Potencial_Intermedio(P[j - 1], P[j], P[j + 1]);
-            if ((j + 1) % 3 == 0) {
-                P[j].q = -1. * q_ant;
-                q_ant = P[j].q;
+
+            int puente = j % 8;
+            if (puente == 0) {
+                P[j].q = +1.;      
+            }
+            else if (puente == 4) {
+                P[j].q = -1.;      
+            }
+            else {
+                P[j].q = 0.;     
             }
         }
         P[j].q *= Q_ct;
@@ -144,7 +148,6 @@ double theta(Vector r1, Vector r2){
 }
 
 // FUNCIONES DE NUMEROS ALEATORIOS //
-
 
 void Ini_N_Rand(int Seed) {
 

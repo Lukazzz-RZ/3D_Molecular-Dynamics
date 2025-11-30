@@ -230,63 +230,87 @@ void Fuerza_Bending(Particula Pant, Particula P, Particula Psig, Vector F[3])
     F[2] = F3;  // fuerza en Psig
 }
 
+#include <stdio.h>  // necesario para printf
+
 void Fuerza_Dihedral(Particula P1, Particula P2, Particula P3, Particula P4, Vector F[4])
 {
-    // Vectores de enlaces
+    const double eps = 1e-6;        // tolerancia para casi colineales
+    const double min_sin = 1e-2;    // evita divisiones por sin(phi) ~ 0
+
+    // --- Vectores de enlace ---
     Vector b1 = resta(P2.pos, P1.pos);
     Vector b2 = resta(P3.pos, P2.pos);
     Vector b3 = resta(P4.pos, P3.pos);
 
-    // Producto cruzado de planos
-    Vector c1 = Pvect(b1, b2);  // plano P1-P2-P3
-    Vector c2 = Pvect(b2, b3);  // plano P2-P3-P4
+    // --- Normales a los planos ---
+    Vector c1 = Pvect(b1, b2);
+    Vector c2 = Pvect(b2, b3);
 
-    double c1_norm2 = Pesc_NoNorm(c1, c1); // |c1|^2
-    double c2_norm2 = Pesc_NoNorm(c2, c2); // |c2|^2
-    const double eps = 1e-12;
+    double c1n = modulo(c1);
+    double c2n = modulo(c2);
 
-    if (c1_norm2 < eps || c2_norm2 < eps) {
-        // fuerzas = 0 si colineales
+    if (c1n < eps || c2n < eps) {   // plano colapsado
         for (int i = 0; i < 4; i++) F[i] = (Vector){ 0,0,0 };
         return;
     }
 
-    double cos_phi = Pesc_Norm(c1, c2) / (sqrt(c1_norm2) * sqrt(c2_norm2));
-    if (cos_phi > 1.0) cos_phi = 1.0;
-    if (cos_phi < -1.0) cos_phi = -1.0;
+    // --- Normalizar ---
+    Vector c1u = Scalar_mult(c1, 1.0 / c1n);
+    Vector c2u = Scalar_mult(c2, 1.0 / c2n);
+    Vector b2u = Scalar_mult(b2, 1.0 / modulo(b2));
+
+    // --- Ángulo dihedral ---
+    double cos_phi = fmax(-1.0, fmin(1.0, Pesc_NoNorm(c1u, c2u)));
     double phi = acos(cos_phi);
+    double signo = Pesc_NoNorm(Pvect(c1, c2), b2);
+    if (signo < 0.0) phi = -phi;
 
-    // derivada del potencial
-    double dVdphi = mult * kb_dih * sin(mult * phi - phi_0); // dV/dphi
+    double sin_phi = sin(phi);
+    if (fabs(sin_phi) < min_sin) sin_phi = (sin_phi >= 0 ? min_sin : -min_sin);
 
-    // escalado de fuerzas exacto
-    double b2_len2 = Pesc_NoNorm(b2, b2);
+    double dVdphi = mult * kb_dih * sin(mult * phi - phi_0);
 
-    // F1 y F4
-    Vector f1 = Scalar_mult(c1, -dVdphi * sqrt(Pesc_NoNorm(b2, b2)) / c1_norm2);
-    Vector f4 = Scalar_mult(c2, dVdphi * sqrt(Pesc_NoNorm(b2, b2)) / c2_norm2);
+    // --- F1 ---
+    Vector t1 = Pvect(c2, b2u);
+    t1 = Scalar_mult(t1, 1.0 / (c1n * c2n));
+    Vector t2 = Pvect(c1, b2u);
+    t2 = Scalar_mult(t2, Pesc_NoNorm(c1, c2) / (c1n * c1n * c1n * c2n));
+    Vector F1 = { (t1.x + t2.x) * dVdphi / sin_phi,
+                  (t1.y + t2.y) * dVdphi / sin_phi,
+                  (t1.z + t2.z) * dVdphi / sin_phi };
 
-    // F2 y F3: distribuimos la fuerza según la derivada completa
-    // Vectores auxiliares
-    double b1_dot_b2 = Pesc_NoNorm(b1, b2);
-    double b3_dot_b2 = Pesc_NoNorm(b3, b2);
+    // --- F4 ---
+    t1 = Pvect(c1, b2u);
+    t1 = Scalar_mult(t1, 1.0 / (c1n * c2n));
+    t2 = Pvect(b2u, c2);
+    t2 = Scalar_mult(t2, Pesc_NoNorm(c1, c2) / (c1n * c2n * c2n * c2n));
+    Vector F4 = { (t1.x + t2.x) * dVdphi / sin_phi,
+                  (t1.y + t2.y) * dVdphi / sin_phi,
+                  (t1.z + t2.z) * dVdphi / sin_phi };
 
-    Vector f2;
-    f2.x = -f1.x * (1 - b1_dot_b2 / b2_len2) - f4.x * (b3_dot_b2 / b2_len2);
-    f2.y = -f1.y * (1 - b1_dot_b2 / b2_len2) - f4.y * (b3_dot_b2 / b2_len2);
-    f2.z = -f1.z * (1 - b1_dot_b2 / b2_len2) - f4.z * (b3_dot_b2 / b2_len2);
+    // --- Lambda ---
+    Vector L1 = Scalar_mult(Pvect(b1, c2), -1.0 / (c1n * c2n));
+    Vector L2 = Scalar_mult(Pvect(c1, b3), -1.0 / (c1n * c2n));
+    Vector L3 = Scalar_mult(Pvect(c1, b1), Pesc_NoNorm(c1, c2) / (c1n * c1n * c1n * c2n));
+    Vector L4 = Scalar_mult(Pvect(c2, b3), Pesc_NoNorm(c1, c2) / (c1n * c2n * c2n * c2n));
+    Vector Lambda = { L1.x + L2.x + L3.x + L4.x,
+                      L1.y + L2.y + L3.y + L4.y,
+                      L1.z + L2.z + L3.z + L4.z };
 
-    Vector f3;
-    f3.x = -(f1.x + f2.x + f4.x);
-    f3.y = -(f1.y + f2.y + f4.y);
-    f3.z = -(f1.z + f2.z + f4.z);
+    // --- F2 y F3 ---
+    Vector F2 = { -F1.x + Lambda.x * dVdphi / sin_phi,
+                  -F1.y + Lambda.y * dVdphi / sin_phi,
+                  -F1.z + Lambda.z * dVdphi / sin_phi };
 
-    // Guardar en array de salida
-    F[0] = f1;  // P1
-    F[1] = f2;  // P2
-    F[2] = f3;  // P3
-    F[3] = f4;  // P4
+    Vector F3 = { -F4.x - Lambda.x * dVdphi / sin_phi,
+                  -F4.y - Lambda.y * dVdphi / sin_phi,
+                  -F4.z - Lambda.z * dVdphi / sin_phi };
+
+    // --- Guardar fuerzas ---
+    F[0] = F1; F[1] = F2; F[2] = F3; F[3] = F4;
 }
+
+
 
 // TERMINOS EXTRA DE FUERZAS
 

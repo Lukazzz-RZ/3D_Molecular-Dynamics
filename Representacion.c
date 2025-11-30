@@ -16,7 +16,15 @@ FILE* crear_archivo_xyz(int bloque) {
 void guardar_bloque_xyz(Particula* P, FILE* f, int paso_global) {
     fprintf(f, "%d\nFrame %d\n", N_particulas, paso_global);
     for (int i = 0; i < N_particulas; i++) {
-        fprintf(f, "P %.6f %.6f %.6f\n",
+        
+        char tipo;
+        if (P[i].q == 0.0)
+            tipo = 'R';   
+        else
+            tipo = 'B';    
+
+        fprintf(f, "%c %.6f %.6f %.6f\n",
+            tipo,
             P[i].pos.x,
             P[i].pos.y,
             P[i].pos.z);
@@ -356,49 +364,47 @@ void crear_script_vmd(int N_bloques) {
         exit(1);
     }
 
-    // Cargar el primer archivo
+    // Cargar archivos XYZ
     fprintf(f, "mol new results/Data_00001.xyz type xyz first 0 last 0 step 1 waitfor all\n");
-
-    // Añadir los demás bloques
-    for (int i = 2; i <= N_bloques; i++) {
+    for (int i = 2; i <= N_bloques; i++)
         fprintf(f, "mol addfile results/Data_%05d.xyz type xyz first 0 last -1 step 1 waitfor all 0\n", i);
-    }
-    //Apaño de los enlaces
 
-    /*
-    mol bondsrecalc top off
-    topo clearbonds
-    for {set i 0} {$i < 15} {incr i} {
-        topo addbond $i [expr {$i+1}]
-    }
-    */
-    fprintf(f, "\nmol bondsrecalc top off\n");
+    // Crear enlaces consecutivos
+    fprintf(f, "color Display Background white\n");
     fprintf(f, "topo clearbonds\n");
     fprintf(f, "for {set i 0} {$i < %d} {incr i} {\n", N_particulas - 1);
-    fprintf(f, "topo addbond $i [expr {$i+1}]\n");
+    fprintf(f, "    topo addbond $i [expr {$i+1}]\n");
     fprintf(f, "}\n");
 
-    // Configuración visual
-    fprintf(f, "\ndisplay resetview\n");
-    fprintf(f, "display resize 1000 800\n");
-    fprintf(f, "display projection Perspective\n");
-    fprintf(f, "color Display Background white\n");
-    fprintf(f, "axes location off\n");
-    fprintf(f, "stage location off\n");
-
-    fprintf(f, "\nmol delrep 0 0\n");
-    fprintf(f, "mol representation Licorice 0.4 12 12\n");
+    fprintf(f, "mol delrep 0 0\n");
+    fprintf(f, "mol delrep 0 0\n");
+    // Licorice para todos los enlaces
+    fprintf(f, "mol representation Licorice 0.05 0.2 12.0\n");
     fprintf(f, "mol color ColorID 1\n");
+    fprintf(f, "mol selection all\n");
     fprintf(f, "mol addrep 0\n");
 
-    // Centrar molécula
-    fprintf(f, "\nset sel [atomselect top all]\n");
+    // CPK para partículas tipo R
+    fprintf(f, "mol representation CPK 0.7 0.2\n");
+    fprintf(f, "mol color ColorID 1\n");
+    fprintf(f, "mol selection {type R}\n");
+    fprintf(f, "mol addrep 0\n");
+
+    // CPK para partículas tipo B
+    fprintf(f, "mol representation CPK 0.7 0.2\n");
+    fprintf(f, "mol color ColorID 0\n");
+    fprintf(f, "mol selection {type B}\n");
+    fprintf(f, "mol addrep 0\n");
+
+    fprintf(f, "set sel [atomselect top all]\n");
     fprintf(f, "set com [measure center $sel]\n");
     fprintf(f, "$sel moveby [vecinvert $com]\n");
     fprintf(f, "$sel delete\n");
 
+    // -------------------------------
     // Animación
-    fprintf(f, "\nanimate goto 0\n");
+    // -------------------------------
+    fprintf(f, "animate goto 0\n");
     fprintf(f, "animate style Loop\n");
     fprintf(f, "animate speed 1.0\n");
     fprintf(f, "animate forward\n");
@@ -406,4 +412,11 @@ void crear_script_vmd(int N_bloques) {
     fclose(f);
     printf("Script VMD 'ver_polimero.vmd' creado correctamente.\n");
 }
+
+
+
+
+
+
+
 

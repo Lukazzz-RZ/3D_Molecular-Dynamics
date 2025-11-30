@@ -43,7 +43,7 @@ void Ini_N_Rand(int SEMILLA);
 
 #define PI acos(-1.0)
 #define N_bins 50
-# define N_particulas 64
+# define N_particulas 128
 
 // VARIABLES GLOBALES
 
