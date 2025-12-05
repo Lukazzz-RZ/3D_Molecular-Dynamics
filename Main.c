@@ -34,7 +34,9 @@ int main() {
             // INTEGRADO
             nsteps++;
             verlet_estocastico_3D(P);
-
+            // posicion de particula 1:
+			//printf("posicion particula 1 en paso %d: %.5f %.5f %.5f\n", total_steps, P[0].pos.x, P[0].pos.y, P[0].pos.z);
+            // 
             // CALCULO ENERGIAS
             Actualizar_Energias(P);
             double Ecin_step = 0.0, Epot_step = 0.0;
@@ -89,8 +91,8 @@ int main() {
     //Ajuste_Rg_en_b();
     //Ajuste_Rg_en_N();
     //Ajuste_Rg_en_k();
-    Ajuste_L_eff_en_Fx();
-    //Gnuplot_EnerCons(Nbloques);
+    //Ajuste_L_eff_en_Fx();
+    Gnuplot_EnerCons(Nbloques);
     //Gnuplot_Rg(Nbloques);
     //Gnuplot_L_eff(Nbloques);
     crear_script_vmd(Nbloques);

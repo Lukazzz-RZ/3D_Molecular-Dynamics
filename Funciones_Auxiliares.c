@@ -9,44 +9,41 @@ unsigned char ind_ran, ig1, ig2, ig3;
 
 // FUNCIONES DE INICIALIZACION DE VARIABLES GLOBALES //
 
+// Inicializa un polímero lineal con ángulos y dihedrales globales
+
 void Inicializar(void) {
     _mkdir("results");
     Ini_N_Rand(time(NULL));
     m = 1.0;
-    k = 200.0;
-    KbT = 1.0;
-    b = 1.0;
+    k = 200.0; // 1000.0 o 50.0
+    KbT = 0.1; // 1.0
+    b = 1.0;  // 1.0
     gamma_DP = 1.0;
     dt = 0.001;
-    tmax = 25.0;
+    tmax = 50.0;
     Fext.x = 0.0;
     Fext.y = 0.0;
     Fext.z = 0.0;
 
-    sigma = b / pow(2.0, 1.0 / 6.0);
-    rc = 3 * sigma;
-    eps = 1.0;
+    sigma = 0.25*b / pow(2.0, 1.0 / 6.0); // 0.25
+    rc = sigma;
+    eps = 1.0; // 1.0
 
-	permitivity = 0.1;
-	Q_ct = 1.0; 
+	permitivity = 0.0;
+	Q_ct = 0.0; 
 
-	kb = 100.0;
-    theta_0 = PI + 30 * PI/180;
+	kb = 00.0; // 100 o 20.0
+    theta_0 = PI - 90.0 * PI/180; // 110.0
 
-	kb_dih = 10.0;
-    phi_0 = 10 * PI / 180;
+	kb_dih = 10.0; // 50.0 o 10.0
+    phi_0 = 90.0 * PI / 180; // 60.0
     mult = 1;
 
-    double radius = 10 * b;       
-    double pitch = 5 * b;    
-    double angle_step = 45.0;
-    double q_ant = 1.;
     for (int j = 0; j < N_particulas; j++) {
         P[j].idx = j;
-        double theta = PI/180 * (j * angle_step);
-        P[j].pos.x = radius * cos(theta);
-        P[j].pos.y = radius * sin(theta);
-        P[j].pos.z = pitch * j / (2 * PI);
+        P[j].pos.x = (double)j * b;
+        P[j].pos.z = 0;
+
         P[j].vel.x = 0.0;
         P[j].vel.y = 0.0;
         P[j].vel.z = 0.0;
@@ -76,6 +73,7 @@ void Inicializar(void) {
         P[j].q *= Q_ct;
     }
 }
+
 
 // FUNCIONES DE CALCULO VECTORIAL //
 
@@ -126,6 +124,14 @@ Vector resta(Vector r1, Vector r2){
     result.y = r1.y -r2.y;
     result.z = r1.z -r2.z;
 
+    return result;
+}
+
+Vector suma(Vector r1, Vector r2) {
+    Vector result;
+    result.x = r1.x + r2.x;
+    result.y = r1.y + r2.y;
+    result.z = r1.z + r2.z;
     return result;
 }
 

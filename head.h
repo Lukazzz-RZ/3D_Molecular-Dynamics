@@ -43,7 +43,8 @@ void Ini_N_Rand(int SEMILLA);
 
 #define PI acos(-1.0)
 #define N_bins 50
-# define N_particulas 128
+# define N_particulas 4
+
 
 // VARIABLES GLOBALES
 
@@ -112,3 +113,4 @@ void Ajuste_L_eff_en_Fx();
 double Potencial_Coulomb(Particula Pi);
 Vector Fuerza_Coulomb(Particula pi);
 void Fuerza_Dihedral(Particula P1, Particula P2, Particula P3, Particula P4, Vector F[4]);
+Vector suma(Vector r1, Vector r2);
