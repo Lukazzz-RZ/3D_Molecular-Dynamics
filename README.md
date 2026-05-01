@@ -11,6 +11,46 @@ The first module studies simple one-dimensional systems such as the harmonic osc
 
 ---
 
+## Table of Contents
+
+- [Repository Structure](#repository-structure)
+- [Part I: Stochastic 1D Dynamics](#part-i-stochastic-1d-dynamics)
+  - [Physical Model](#physical-model)
+  - [Numerical Integration Methods](#numerical-integration-methods)
+  - [Random Number Generation](#random-number-generation)
+  - [Harmonic Oscillator](#harmonic-oscillator)
+  - [Double-Well Potential](#double-well-potential)
+  - [Double-Well Position Distribution](#double-well-position-distribution)
+  - [Residence Times and Well Occupation](#residence-times-and-well-occupation)
+  - [External Force in the Double-Well Potential](#external-force-in-the-double-well-potential)
+  - [Summary of the Stochastic 1D Module](#summary-of-the-stochastic-1d-module)
+- [Part II: Polymer Dynamics](#part-ii-polymer-dynamics)
+  - [Polymer Model](#polymer-model)
+  - [Thermodynamic Validation](#thermodynamic-validation)
+  - [Radius of Gyration](#radius-of-gyration)
+  - [Analytical Scaling](#analytical-scaling)
+  - [Radius of Gyration Simulation](#radius-of-gyration-simulation)
+  - [Parameter Dependence](#parameter-dependence)
+  - [Force-Extension Behavior](#force-extension-behavior)
+- [Extended Polymer Model](#extended-polymer-model)
+  - [Lennard-Jones Interactions](#lennard-jones-interactions)
+  - [Electrostatic Interactions](#electrostatic-interactions)
+  - [Bending Energy](#bending-energy)
+  - [Combined Extended Model](#combined-extended-model)
+- [Analytical Background](#analytical-background)
+  - [Double-Well Occupation Correction](#double-well-occupation-correction)
+  - [Analytical Radius of Gyration](#analytical-radius-of-gyration)
+  - [Bending Force Derivation](#bending-force-derivation)
+  - [Dihedral Force: Future Extension](#dihedral-force-future-extension)
+- [Documentation](#documentation)
+- [How to Run](#how-to-run)
+- [Requirements](#requirements)
+- [Main Concepts](#main-concepts)
+- [Notes](#notes)
+- [Figure List](#figure-list)
+
+---
+
 ## Repository Structure
 
 ```text
