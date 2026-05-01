@@ -1,4 +1,4 @@
-#include "head.h"
+#include "../include/polymer_md.h"
 
 // DECLARACIÓN DE VARIABLES FISICAS GLOBALES //
 Particula P[N_particulas];
@@ -257,48 +257,50 @@ void Fuerza_Bending(Particula Pant, Particula P, Particula Psig, Vector F[3])
 
 void Fuerza_Dihedral(Particula P1, Particula P2, Particula P3, Particula P4, Vector F[4]) {
     // ----- Vectores de enlace -----
-    Vector b1 = resta(P2.pos, P1.pos); // r12
-    Vector b2 = resta(P3.pos, P2.pos); // r23
-    Vector b3 = resta(P4.pos, P3.pos); // r34
+    Vector b1 = resta(P2.pos, P1.pos);
+    Vector b2 = resta(P3.pos, P2.pos);
+    Vector b3 = resta(P4.pos, P3.pos);
 
-    // ----- Vectores c1 y c2 -----
-    Vector c1 = Pvect(b1, b2); // c1 = b1 x b2
-    Vector c2 = Pvect(b2, b3); // c2 = b2 x b3
+    // ----- Vectores normales -----
+    Vector c1 = Pvect(b1, b2); // normal al plano P1-P2-P3
+    Vector c2 = Pvect(b2, b3); // normal al plano P2-P3-P4
 
-    // ----- Producto punto y cruz para denominador -----
-    double c1_c2 = Pesc_NoNorm(c1, c2);      // c1 · c2
-    Vector c1xc2 = Pvect(c1, c2);            // c1 x c2
-    double b2_c1xc2 = Pesc_NoNorm(b2, c1xc2);// b2 · (c1 x c2)
+    double norm_c1 = modulo(c1);
+    double norm_c2 = modulo(c2);
+    double norm_b2 = modulo(b2);
+    double eps = 1e-8;
 
-    double denom = c1_c2 * c1_c2 + b2_c1xc2 * b2_c1xc2;
-	double eps = 1e-4;
-	if (denom < eps) denom = eps; // Caso colineal
+    if (norm_c1 < eps || norm_c2 < eps || norm_b2 < eps) {
+        for (int i = 0; i < 4; i++) F[i] = (Vector){ 0,0,0 };
+        return;
+    }
 
-    // ----- Derivada del potencial dihedral -----
-    double phi = atan2(b2_c1xc2, c1_c2);
+    Vector b2_hat = Normalize(b2);
+
+    // ----- Ángulo diedro -----
+    double phi = atan2(modulo(Pvect(c1, c2)) * (Pesc_NoNorm(b2_hat, Pvect(c1, c2)) > 0 ? 1 : -1),
+        Pesc_NoNorm(c1, c2));
+
     double dVdphi = kb_dih * mult * sin(mult * phi - phi_0);
 
-    // ----- Lambda: término de partículas intermedias -----
-    Vector lam_sum = suma(Pvect(b1, c2), Pvect(c1, b3)); // b1 x c2 + c1 x b3
-    Vector term1 = Scalar_mult(lam_sum, c1_c2);            // (c1·c2) * (b1 x c2 + c1 x b3)
-    Vector term2 = Scalar_mult(lam_sum, b2_c1xc2);         // (b2·(c1 x c2)) * (b1 x c2 + c1 x b3)
-    Vector lam_num = resta(term1, term2);                  // Numerador
-    Vector Lambda = Scalar_mult(lam_num, dVdphi / denom);
+    // ----- Fuerzas -----
+    Vector t1 = Scalar_mult(Pvect(b2_hat, c1), 1.0 / (norm_c1 * norm_c1));
+    Vector t4 = Scalar_mult(Pvect(b2_hat, c2), 1.0 / (norm_c2 * norm_c2));
 
-    // ----- F1 -----
-    Vector F1_num = Scalar_mult(Pvect(b2, c2), b2_c1xc2); // (b2·(c1 x c2)) * (b2 x c2)
-    F[0] = Scalar_mult(F1_num, dVdphi / denom);
+    F[0] = Scalar_mult(t1, -dVdphi);          // P1
+    F[3] = Scalar_mult(t4, dVdphi);           // P4
 
-    // ----- F4 -----
-    Vector F4_num = Scalar_mult(Pvect(b2, c1), b2_c1xc2); // (b2·(c1 x c2)) * (b2 x c1)
-    F[3] = Scalar_mult(F4_num, dVdphi / denom);
+    Vector t2 = resta(Scalar_mult(t1, -Pesc_NoNorm(b1, b2) / (norm_b2 * norm_b2)),
+        Scalar_mult(t4, Pesc_NoNorm(b3, b2) / (norm_b2 * norm_b2)));
+    F[1] = Scalar_mult(t2, -dVdphi);          // P2
 
-    // ----- F2 -----
-    F[1] = resta(Lambda, F[0]); // F2 = -F1 + Lambda
-
-    // ----- F3 -----
-    F[2] = resta(Scalar_mult(F[3], -1.0), Lambda); // F3 = -F4 - Lambda
+    F[2] = Scalar_mult(resta(Scalar_mult(t4, -1.0), t1), -dVdphi); // P3
 }
+
+
+
+
+
 
 
 // TERMINOS EXTRA DE FUERZAS
@@ -486,7 +488,7 @@ void Actualizar_Energias(Particula* P) {
         }
     }
 
-    #ifdef COMPLEXMODEL:
+    #ifdef COMPLEXMODEL
     // ----- Energía de bending -----
     for (int j = 1; j < N_particulas - 1; j++) {
         double Vb = Potencial_Bending(P[j - 1], P[j], P[j + 1]);

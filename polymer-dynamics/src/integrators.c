@@ -1,4 +1,4 @@
-﻿#include "head.h"
+#include "../include/polymer_md.h"
 
 // METODOS NUMERICOS PARA ECUACIONES DIFERENCIALES //
 

@@ -1,14 +1,26 @@
 
-// LIBRERIAS
+#ifndef POLYMER_MD_H
+#define POLYMER_MD_H
+
+// Libraries
 #define _CRT_SECURE_NO_WARNINGS // Para VS 2022 (si usais otro entorno no creo que os dé problemas)
-#include "stdio.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <direct.h> 
+
 #include <math.h>
 #include <time.h>
+#ifdef _WIN32
+    #include <direct.h>
+    #define MAKE_DIR(path) _mkdir(path)
+#else
+    #include <sys/stat.h>
+    #include <sys/types.h>
+    #define MAKE_DIR(path) mkdir(path, 0777)
+#endif
+
 //#define SWEEPMODE
-#define COMPLEXMODEL
+//#define COMPLEXMODEL
 
 
 // FORMATO DE TRABAJO
@@ -43,7 +55,7 @@ void Ini_N_Rand(int SEMILLA);
 
 #define PI acos(-1.0)
 #define N_bins 50
-# define N_particulas 4
+# define N_particulas 32
 
 
 // VARIABLES GLOBALES
@@ -114,3 +126,4 @@ double Potencial_Coulomb(Particula Pi);
 Vector Fuerza_Coulomb(Particula pi);
 void Fuerza_Dihedral(Particula P1, Particula P2, Particula P3, Particula P4, Vector F[4]);
 Vector suma(Vector r1, Vector r2);
+#endif /* POLYMER_MD_H */

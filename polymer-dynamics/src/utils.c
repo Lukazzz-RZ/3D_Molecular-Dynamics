@@ -1,4 +1,4 @@
-﻿#include "head.h"
+#include "../include/polymer_md.h"
 
 // DECLARACIÓN DE VARIABLES AUXILIARES GLOBALES //
 
@@ -12,39 +12,39 @@ unsigned char ind_ran, ig1, ig2, ig3;
 // Inicializa un polímero lineal con ángulos y dihedrales globales
 
 void Inicializar(void) {
-    _mkdir("results");
+    MAKE_DIR("results");
     Ini_N_Rand(time(NULL));
     m = 1.0;
-    k = 200.0; // 1000.0 o 50.0
-    KbT = 0.1; // 1.0
+    k = 100.0; // 1000.0 o 50.0
+    KbT = 1.0; // 1.0
     b = 1.0;  // 1.0
     gamma_DP = 1.0;
     dt = 0.001;
-    tmax = 50.0;
+    tmax = 100.0;
     Fext.x = 0.0;
     Fext.y = 0.0;
     Fext.z = 0.0;
 
-    sigma = 0.25*b / pow(2.0, 1.0 / 6.0); // 0.25
+    sigma = 0.1*b / pow(2.0, 1.0 / 6.0); // 0.25
     rc = sigma;
-    eps = 1.0; // 1.0
+    eps = 10.0; // 1.0
 
 	permitivity = 0.0;
 	Q_ct = 0.0; 
 
-	kb = 00.0; // 100 o 20.0
-    theta_0 = PI - 90.0 * PI/180; // 110.0
+	kb = 50.0; // 100 o 20.0
+    theta_0 = PI - 100.0 * PI/180; // 110.0
 
-	kb_dih = 10.0; // 50.0 o 10.0
-    phi_0 = 90.0 * PI / 180; // 60.0
+	kb_dih = 0.0; // 50.0 o 10.0
+    phi_0 = 0.0 * PI / 180; // 60.0
     mult = 1;
 
     for (int j = 0; j < N_particulas; j++) {
         P[j].idx = j;
-        P[j].pos.x = (double)j * b;
-        P[j].pos.z = 0;
+        P[j].pos.x = (double)j * 2* b;
+        P[j].pos.z = (double)0.0;
 
-        P[j].vel.x = 0.0;
+        P[j].vel.x = (j % 2 == 0 ? 10.0 : -10.0);
         P[j].vel.y = 0.0;
         P[j].vel.z = 0.0;
 
