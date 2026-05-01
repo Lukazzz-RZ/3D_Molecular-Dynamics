@@ -37,6 +37,7 @@ The first module studies simple one-dimensional systems such as the harmonic osc
   - [Electrostatic Interactions](#electrostatic-interactions)
   - [Bending Energy](#bending-energy)
   - [Combined Extended Model](#combined-extended-model)
+  - [Polymer Dynamics Videos](#polymer-dynamics-videos)
 - [Analytical Background](#analytical-background)
   - [Double-Well Occupation Correction](#double-well-occupation-correction)
   - [Analytical Radius of Gyration](#analytical-radius-of-gyration)
@@ -47,7 +48,7 @@ The first module studies simple one-dimensional systems such as the harmonic osc
 - [Requirements](#requirements)
 - [Main Concepts](#main-concepts)
 - [Notes](#notes)
-- [Figure List](#figure-list)
+- [Figure and Video List](#figure-and-video-list)
 
 ---
 
@@ -80,6 +81,15 @@ molecular-simulation/
 │   ├── polymer_parameter_sweep.png
 │   ├── polymer_force_extension.png
 │   └── polymer_extended_model.png
+│
+├── videos/
+│   ├── attraction_repulsion.mp4
+│   ├── base_model.mp4
+│   ├── base_vs_bending.mp4
+│   ├── base_vs_bending_alt.mp4
+│   ├── collisions_off.mp4
+│   ├── collisions_on.mp4
+│   └── repulsion_only.mp4
 │
 └── README.md
 ```
@@ -487,6 +497,44 @@ This produces more realistic polymer behavior and allows comparison between the 
 
 ---
 
+## Polymer Dynamics Videos
+
+The following videos show the time evolution of different polymer models.
+
+### Base Polymer Model
+
+This video shows the base bead-spring polymer model evolving under molecular dynamics.
+
+[Watch base polymer model](videos/base_model.mp4)
+
+### Base Model vs Bending
+
+The bending interaction increases the stiffness of the polymer chain and modifies its conformational dynamics.
+
+[Watch base model vs bending](videos/base_vs_bending.mp4)
+
+### Attraction and Repulsion
+
+The Lennard-Jones interaction introduces short-range repulsion and longer-range attraction between particles.
+
+[Watch attraction and repulsion](videos/attraction_repulsion.mp4)
+
+### Repulsion Only
+
+This video isolates the effect of repulsive interactions between particles.
+
+[Watch repulsion-only model](videos/repulsion_only.mp4)
+
+### Collisions Off vs On
+
+These videos compare polymer behavior with collision interactions disabled and enabled.
+
+[Watch collisions off](videos/collisions_off.mp4)
+
+[Watch collisions on](videos/collisions_on.mp4)
+
+---
+
 # Analytical Background
 
 This project is supported by several analytical derivations used to validate and interpret the numerical simulations.
@@ -800,7 +848,7 @@ The analytical derivations are included as theoretical support for the numerical
 
 ---
 
-# Figure List
+# Figure and Video List
 
 The README expects the following files inside the `figures/` folder:
 
@@ -818,4 +866,17 @@ figures/
 ├── polymer_parameter_sweep.png
 ├── polymer_force_extension.png
 └── polymer_extended_model.png
+```
+
+The README expects the following files inside the `videos/` folder:
+
+```text
+videos/
+├── attraction_repulsion.mp4
+├── base_model.mp4
+├── base_vs_bending.mp4
+├── base_vs_bending_alt.mp4
+├── collisions_off.mp4
+├── collisions_on.mp4
+└── repulsion_only.mp4
 ```
