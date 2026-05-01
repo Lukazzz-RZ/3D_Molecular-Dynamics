@@ -447,6 +447,239 @@ This produces more realistic polymer behavior and allows comparison between the 
 
 ---
 
+# Analytical Background
+
+This project is supported by several analytical derivations used to validate and interpret the numerical simulations.
+
+The main analytical results are related to:
+
+- Occupation probability in a biased double-well potential.
+- Radius of gyration of an ideal bead-spring polymer.
+- Bending force derivation for three consecutive polymer particles.
+- Dihedral force derivation as a possible future extension.
+
+These results provide theoretical references for the stochastic and polymer simulations.
+
+---
+
+## Double-Well Occupation Correction
+
+For the forced double-well system, the potential is:
+
+```text
+V(x) = A (x^2 - a^2)^2 - F x
+```
+
+When a small external force is applied, the two wells are no longer energetically equivalent.
+
+For weak forces, the minimum positions can be approximated as:
+
+```text
+x_plus  =  a + F / (8 A a^2)
+x_minus = -a + F / (8 A a^2)
+```
+
+The energy difference between both minima is approximately:
+
+```text
+Delta V ≈ -2 F a
+```
+
+Using a harmonic approximation around each minimum, the occupation probability of the right well can be corrected as:
+
+```text
+P_plus ≈ 1 / (1 + exp[-2 beta F a + 3F / (8 A a^3)])
+```
+
+This expression improves the simple two-state approximation by including the change in curvature of the potential wells caused by the applied force.
+
+This analytical correction is used as a reference for the numerical occupation probability obtained from the stochastic simulation.
+
+---
+
+## Analytical Radius of Gyration
+
+For the polymer module, the chain is modeled as an open bead-spring chain with harmonic bonds between neighboring particles:
+
+```text
+V(r_i, r_i+1) = 1/2 k (|r_i+1 - r_i| - b)^2
+```
+
+The radius of gyration is defined as:
+
+```text
+Rg^2 = (1/N) sum_i |r_i - R_CM|^2
+```
+
+An equivalent expression in terms of pairwise distances is:
+
+```text
+Rg^2 = (1 / 2N^2) sum_i sum_j < |r_i - r_j|^2 >
+```
+
+Using bond vectors:
+
+```text
+u_i = r_i+1 - r_i
+```
+
+and assuming independent, isotropically distributed bonds at equilibrium, one obtains:
+
+```text
+< |r_i - r_j|^2 > = |i - j| l^2
+```
+
+where:
+
+```text
+l^2 = < |u_i|^2 >
+```
+
+This leads to:
+
+```text
+Rg^2 = (l^2 / 6) (N - 1/N)
+```
+
+The effective squared bond length is obtained from the thermal radial distribution of the harmonic bond:
+
+```text
+l^2 = [b^4 + 6b^2/(beta k) + 3/(beta k)^2] / [b^2 + 1/(beta k)]
+```
+
+In the rigid-bond limit:
+
+```text
+beta k >> 1
+```
+
+this reduces to:
+
+```text
+l^2 ≈ b^2
+```
+
+and therefore:
+
+```text
+Rg ≈ (b / sqrt(6)) sqrt(N)
+```
+
+This analytical scaling is used to validate the simulated radius of gyration.
+
+---
+
+## Bending Force Derivation
+
+The extended polymer model includes bending interactions involving three consecutive particles.
+
+For three particles:
+
+```text
+P_previous, P, P_next
+```
+
+define the bond vectors:
+
+```text
+a = r_previous - r_P
+b = r_next - r_P
+```
+
+The bending potential is:
+
+```text
+V_b(theta) = k_b [1 - cos(theta - theta_0)]
+```
+
+where `theta` is the angle between the two bond vectors.
+
+The derivative of the potential is:
+
+```text
+dV_b / dtheta = k_b sin(theta - theta_0)
+```
+
+The resulting forces on the three particles can be written as:
+
+```text
+F_previous = (dV_b/dtheta) [b_hat - cos(theta) a_hat] / [|a| sin(theta)]
+
+F_next = (dV_b/dtheta) [a_hat - cos(theta) b_hat] / [|b| sin(theta)]
+
+F_center = -(F_previous + F_next)
+```
+
+This guarantees conservation of total force for the bending interaction.
+
+The bending term introduces chain stiffness and allows the model to move beyond a purely freely jointed chain description.
+
+---
+
+## Dihedral Force: Future Extension
+
+A possible future extension is the inclusion of dihedral interactions involving four consecutive particles.
+
+The proposed dihedral potential has the form:
+
+```text
+V_dih(phi) = k_dih [1 - cos(n phi - phi_0)]
+```
+
+where:
+
+- `phi` is the dihedral angle.
+- `k_dih` is the dihedral stiffness.
+- `n` is the multiplicity.
+- `phi_0` is the preferred phase.
+
+The derivation considers four particles:
+
+```text
+P1, P2, P3, P4
+```
+
+with bond vectors:
+
+```text
+b1 = r2 - r1
+b2 = r3 - r2
+b3 = r4 - r3
+```
+
+and plane normals:
+
+```text
+c1 = b1 x b2
+c2 = b2 x b3
+```
+
+The angle can be defined from:
+
+```text
+cos(phi) = (c1 · c2) / (|c1| |c2|)
+```
+
+However, a robust implementation should use a signed definition of the dihedral angle, since the cosine alone does not distinguish chirality. For this reason, the dihedral force is left as future work rather than part of the current implemented model.
+
+---
+
+# Documentation
+
+The repository includes two complementary levels of documentation:
+
+- The source code, which implements the simulations.
+- The analytical derivations, which justify and validate several of the numerical results.
+
+The analytical material is especially useful for understanding:
+
+- Why the biased double-well occupation follows a corrected sigmoid-like curve.
+- Why the polymer radius of gyration scales as sqrt(N).
+- How bending forces are obtained from an angular potential.
+- Why a signed dihedral angle is needed for future torsional interactions.
+
+---
+
 # How to Run
 
 Each module can be compiled independently.
@@ -502,12 +735,16 @@ This repository covers:
 - Harmonic oscillator validation.
 - Double-well barrier crossing.
 - Residence time statistics.
+- Biased occupation in asymmetric double-well potentials.
+- Harmonic approximation around potential minima.
 - Polymer bead-spring models.
 - Radius of gyration.
+- Analytical scaling of polymer size.
 - Force-extension behavior.
 - Lennard-Jones interactions.
 - Electrostatic interactions.
 - Bending energy.
+- Future extension to dihedral forces.
 
 ---
 
@@ -518,6 +755,8 @@ This project is intended as a computational physics and molecular simulation stu
 The code is designed to explore physical behavior rather than provide a production molecular dynamics engine.
 
 The structure separates simple stochastic models from polymer simulations so that each part can be studied and extended independently.
+
+The analytical derivations are included as theoretical support for the numerical results. They are not required to run the code, but they explain the physical formulas used to interpret the simulations.
 
 ---
 
